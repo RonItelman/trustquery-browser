@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrustQuery - Basic Example</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 100%;
+      width: calc(100vw - 100px);
+      margin: 50px auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #2d3748;
+    }
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>TrustQuery - Basic Example</h1>
+  <p>Type <code>@client</code>, <code>@analytics</code>, or <code>yesterday</code> to see triggers in action.</p>
+
+  <textarea id="demo" placeholder="Type here to see TrustQuery in action..."></textarea>
+
+  <script type="module">
+    import TrustQuery from '../dist/trustquery.js';
+
+    TrustQuery.init('demo', {
+      commandMapUrl: './tql-triggers.json'
+    });
+  </script>
+</body>
+</html>

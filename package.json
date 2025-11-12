@@ -1,0 +1,46 @@
+{
+  "name": "@trustquery/browser",
+  "version": "0.1.0",
+  "description": "Turn any textarea into an interactive trigger-based editor with inline styling",
+  "type": "module",
+  "main": "dist/trustquery.js",
+  "module": "dist/trustquery.js",
+  "exports": {
+    ".": {
+      "import": "./dist/trustquery.js",
+      "types": "./dist/trustquery.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "textarea",
+    "editor",
+    "triggers",
+    "interactive",
+    "autocomplete",
+    "mentions"
+  ],
+  "author": "TrustQuery",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonItelman/trustquery-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RonItelman/trustquery-browser/issues"
+  },
+  "homepage": "https://github.com/RonItelman/trustquery-browser#readme",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^4.9.6"
+  }
+}

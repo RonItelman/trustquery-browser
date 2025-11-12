@@ -1,0 +1,327 @@
+// TrustQuery - Lightweight library to make textareas interactive
+// Turns matching words into interactive elements with hover bubbles and click actions
+
+import OverlayRenderer from './OverlayRenderer.js';
+import CommandScanner from './CommandScanner.js';
+import InteractionHandler from './InteractionHandler.js';
+import StyleManager from './StyleManager.js';
+import CommandHandlerRegistry from './CommandHandlers.js';
+
+export default class TrustQuery {
+  // Store all instances
+  static instances = new Map();
+
+  /**
+   * Initialize TrustQuery on a textarea
+   * @param {string|HTMLElement} textareaId - ID or element of textarea
+   * @param {Object} options - Configuration options
+   * @returns {TrustQuery} Instance
+   */
+  static init(textareaId, options = {}) {
+    const textarea = typeof textareaId === 'string'
+      ? document.getElementById(textareaId)
+      : textareaId;
+
+    if (!textarea) {
+      console.error('[TrustQuery] Textarea not found:', textareaId);
+      return null;
+    }
+
+    // Check if already initialized
+    const existingInstance = TrustQuery.instances.get(textarea);
+    if (existingInstance) {
+      console.warn('[TrustQuery] Already initialized on this textarea, returning existing instance');
+      return existingInstance;
+    }
+
+    // Create new instance
+    const instance = new TrustQuery(textarea, options);
+    TrustQuery.instances.set(textarea, instance);
+
+    console.log('[TrustQuery] Initialized successfully on:', textarea.id || textarea);
+    return instance;
+  }
+
+  /**
+   * Get existing instance
+   * @param {string|HTMLElement} textareaId - ID or element
+   * @returns {TrustQuery|null} Instance or null
+   */
+  static getInstance(textareaId) {
+    const textarea = typeof textareaId === 'string'
+      ? document.getElementById(textareaId)
+      : textareaId;
+    return TrustQuery.instances.get(textarea) || null;
+  }
+
+  /**
+   * Create a TrustQuery instance
+   * @param {HTMLElement} textarea - Textarea element
+   * @param {Object} options - Configuration
+   */
+  constructor(textarea, options = {}) {
+    this.textarea = textarea;
+    this.options = {
+      commandMapUrl: options.commandMapUrl || null,
+      commandMap: options.commandMap || null,
+      autoLoadCommandMap: options.autoLoadCommandMap !== false, // default true
+      theme: options.theme || 'light',
+      bubbleDelay: options.bubbleDelay || 200,
+      onWordClick: options.onWordClick || null,
+      onWordHover: options.onWordHover || null,
+
+      // Theme/style options (passed to StyleManager)
+      backgroundColor: options.backgroundColor,
+      textColor: options.textColor,
+      caretColor: options.caretColor,
+      borderColor: options.borderColor,
+      borderColorFocus: options.borderColorFocus,
+      matchBackgroundColor: options.matchBackgroundColor,
+      matchTextColor: options.matchTextColor,
+      matchHoverBackgroundColor: options.matchHoverBackgroundColor,
+      fontFamily: options.fontFamily,
+      fontSize: options.fontSize,
+      lineHeight: options.lineHeight,
+
+      ...options
+    };
+
+    this.commandMap = null;
+    this.isReady = false;
+
+    // Initialize components
+    this.init();
+  }
+
+  /**
+   * Initialize all components
+   */
+  async init() {
+    console.log('[TrustQuery] Starting initialization...');
+
+    // Initialize command handler registry
+    this.commandHandlers = new CommandHandlerRegistry();
+
+    // Initialize style manager (handles all inline styling)
+    this.styleManager = new StyleManager(this.options);
+
+    // Create wrapper and overlay structure
+    this.createOverlayStructure();
+
+    // Initialize renderer
+    this.renderer = new OverlayRenderer(this.overlay, {
+      theme: this.options.theme,
+      commandHandlers: this.commandHandlers // Pass handlers for styling
+    });
+
+    // Initialize scanner (will be configured when command map loads)
+    this.scanner = new CommandScanner();
+
+    // Initialize interaction handler
+    this.interactionHandler = new InteractionHandler(this.overlay, {
+      bubbleDelay: this.options.bubbleDelay,
+      onWordClick: this.options.onWordClick,
+      onWordHover: this.options.onWordHover,
+      styleManager: this.styleManager, // Pass style manager for bubbles/dropdowns
+      commandHandlers: this.commandHandlers, // Pass handlers for bubble content
+      textarea: this.textarea // Pass textarea for on-select display updates
+    });
+
+    // Setup textarea event listeners
+    this.setupTextareaListeners();
+
+    // Load command map
+    if (this.options.autoLoadCommandMap) {
+      await this.loadCommandMap();
+    } else if (this.options.commandMap) {
+      this.updateCommandMap(this.options.commandMap);
+    }
+
+    // Initial render
+    this.render();
+
+    this.isReady = true;
+
+    // Auto-focus textarea to show cursor
+    setTimeout(() => {
+      this.textarea.focus();
+    }, 100);
+
+    console.log('[TrustQuery] Initialization complete');
+  }
+
+  /**
+   * Create the overlay structure
+   */
+  createOverlayStructure() {
+    // Create wrapper to contain both textarea and overlay
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tq-wrapper';
+
+    // Wrap textarea
+    this.textarea.parentNode.insertBefore(wrapper, this.textarea);
+    wrapper.appendChild(this.textarea);
+
+    // Add TrustQuery class to textarea
+    this.textarea.classList.add('tq-textarea');
+
+    // Create overlay
+    this.overlay = document.createElement('div');
+    this.overlay.className = 'tq-overlay';
+    wrapper.appendChild(this.overlay);
+
+    // Store wrapper reference
+    this.wrapper = wrapper;
+
+    // Apply all inline styles via StyleManager
+    this.styleManager.applyAllStyles(wrapper, this.textarea, this.overlay);
+
+    // Show textarea now that structure is ready (prevents FOUC)
+    this.textarea.style.opacity = '1';
+
+    console.log('[TrustQuery] Overlay structure created with inline styles');
+  }
+
+  /**
+   * Setup textarea event listeners
+   */
+  setupTextareaListeners() {
+    // Input event - re-render on content change
+    this.textarea.addEventListener('input', () => {
+      this.render();
+    });
+
+    // Scroll event - sync overlay scroll with textarea
+    this.textarea.addEventListener('scroll', () => {
+      this.overlay.scrollTop = this.textarea.scrollTop;
+      this.overlay.scrollLeft = this.textarea.scrollLeft;
+    });
+
+    // Focus/blur events - add/remove focus class
+    this.textarea.addEventListener('focus', () => {
+      this.wrapper.classList.add('tq-focused');
+    });
+
+    this.textarea.addEventListener('blur', (e) => {
+      // Close dropdown when textarea loses focus (unless interacting with dropdown)
+      if (this.interactionHandler) {
+        // Use setTimeout to let the new focus target be set and check if clicking on dropdown
+        setTimeout(() => {
+          const activeElement = document.activeElement;
+          const isDropdownRelated = activeElement && (
+            activeElement.classList.contains('tq-dropdown-filter') ||
+            activeElement.closest('.tq-dropdown') // Check if clicking anywhere in dropdown
+          );
+
+          // Only close if not interacting with dropdown
+          if (!isDropdownRelated) {
+            this.interactionHandler.hideDropdown();
+          }
+
+          // Remove focus class only if we're truly leaving the component
+          if (!isDropdownRelated) {
+            this.wrapper.classList.remove('tq-focused');
+          }
+        }, 0);
+      }
+    });
+
+    console.log('[TrustQuery] Textarea listeners attached');
+  }
+
+  /**
+   * Load command map (static tql-triggers.json or from URL)
+   */
+  async loadCommandMap() {
+    try {
+      // Default to static file if no URL provided
+      const url = this.options.commandMapUrl || '/trustquery/tql-triggers.json';
+
+      console.log('[TrustQuery] Loading trigger map from:', url);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.updateCommandMap(data);
+
+      console.log('[TrustQuery] Trigger map loaded successfully');
+    } catch (error) {
+      console.error('[TrustQuery] Failed to load trigger map:', error);
+    }
+  }
+
+  /**
+   * Update command map
+   * @param {Object} commandMap - New command map
+   */
+  updateCommandMap(commandMap) {
+    this.commandMap = commandMap;
+    this.scanner.setCommandMap(commandMap);
+    console.log('[TrustQuery] Command map updated');
+
+    // Re-render with new command map
+    if (this.isReady) {
+      this.render();
+    }
+  }
+
+  /**
+   * Render the overlay with styled text
+   */
+  render() {
+    const text = this.textarea.value;
+
+    // Scan text for matches
+    const matches = this.scanner.scan(text);
+
+    // Render overlay with matches
+    this.renderer.render(text, matches);
+
+    // Update interaction handler with new elements
+    this.interactionHandler.update();
+  }
+
+  /**
+   * Destroy instance and cleanup
+   */
+  destroy() {
+    console.log('[TrustQuery] Destroying instance');
+
+    // Remove event listeners
+    this.textarea.removeEventListener('input', this.render);
+    this.textarea.removeEventListener('scroll', this.syncScroll);
+
+    // Cleanup interaction handler
+    if (this.interactionHandler) {
+      this.interactionHandler.destroy();
+    }
+
+    // Unwrap textarea
+    const parent = this.wrapper.parentNode;
+    parent.insertBefore(this.textarea, this.wrapper);
+    parent.removeChild(this.wrapper);
+
+    // Remove from instances
+    TrustQuery.instances.delete(this.textarea);
+
+    console.log('[TrustQuery] Destroyed');
+  }
+
+  /**
+   * Get current value
+   */
+  getValue() {
+    return this.textarea.value;
+  }
+
+  /**
+   * Set value
+   */
+  setValue(value) {
+    this.textarea.value = value;
+    this.render();
+  }
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrustQuery - Interactive Textarea Demo</title>
+  <link rel="stylesheet" href="./demo.css">
+  <link rel="stylesheet" href="./modal.css">
+</head>
+<body>
+
+  <header style="display: flex; align-items: center;">
+    <div id="logo-container" style="display: flex; align-items: center; gap: 12px;">
+      <img src="./assets/trustquery-logo.svg" alt="TrustQuery Logo" style="height: 32px; width: auto;">
+      <span style="font-weight: bold; font-size: 20px;">TrustQuery</span>
+    </div>
+    <button id="help-button" class="help-button" title="Open Help">
+      <span class="material-icons-outlined">help_outline</span>
+    </button>
+  </header>
+  <div class="container">
+
+    <div class="demo-section">
+
+      <textarea id="demo-textarea" placeholder="Try typing an email address, temporal words like 'yesterday' or 'today', or commands like '@analytics' or '@client'" style="opacity: 0; transition: opacity 0.1s;"></textarea>
+    </div>
+  </div>
+
+  <script type="module">
+    import TrustQuery from '../dist/trustquery.js';
+    import HelpModalManager from './HelpModalManager.js';
+
+    console.log('[Demo] Initializing TrustQuery...');
+
+    // Initialize Help Modal Manager
+    const helpModal = new HelpModalManager(null); // Pass null initially, update after editor loads
+
+    // Initialize TrustQuery
+    const editor = TrustQuery.init('demo-textarea', {
+      commandMapUrl: './tql-triggers.json',
+      autoLoadCommandMap: true,
+      bubbleDelay: 300,
+
+      onWordHover: (matchData) => {
+        const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
+        helpModal.logEvent(`Hovered: "${matchData.text}" (${messageState})`);
+      },
+
+      onWordClick: (matchData) => {
+        const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
+        helpModal.logEvent(`Clicked: "${matchData.text}" (${messageState})`);
+        if (matchData.selectedOption) {
+          const label = typeof matchData.selectedOption === 'string'
+            ? matchData.selectedOption
+            : matchData.selectedOption.label;
+          helpModal.logEvent(`  → Selected: ${label}`);
+        }
+      }
+    });
+
+    // Update help modal with editor reference
+    helpModal.editor = editor;
+
+    // Store globally for debugging
+    window.editor = editor;
+    window.helpModal = helpModal;
+
+    // Setup help button
+    document.getElementById('help-button').addEventListener('click', () => {
+      helpModal.show();
+    });
+
+    // Log initialization after trigger map loads
+    setTimeout(() => {
+      if (editor && editor.commandMap) {
+        // Count triggers from tql-triggers format
+        let triggerCount = 0;
+        if (editor.commandMap['tql-triggers']) {
+          const triggers = editor.commandMap['tql-triggers'];
+          Object.keys(triggers).forEach(state => {
+            if (!state.startsWith('$') && Array.isArray(triggers[state])) {
+              triggerCount += triggers[state].length;
+            }
+          });
+        }
+
+        helpModal.logEvent(`TrustQuery initialized with ${triggerCount} triggers`);
+        // Modal content will be populated when user opens the modal
+      } else {
+        helpModal.logEvent('ERROR: Trigger map failed to load');
+      }
+    }, 1000);
+
+    console.log('[Demo] TrustQuery initialized:', editor);
+  </script>
+</body>
+</html>
