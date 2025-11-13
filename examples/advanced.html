@@ -18,11 +18,25 @@
       <span class="material-icons-outlined">help_outline</span>
     </button>
   </header>
-  <div class="container">
 
-    <div class="demo-section">
+  <div id="chat-messages" class="chat-messages">
+    <!-- Chat messages will appear here -->
+  </div>
 
-      <textarea id="demo-textarea" placeholder="Try typing an email address, temporal words like 'yesterday' or 'today', or commands like '@analytics' or '@client'" style="opacity: 0; transition: opacity 0.1s;"></textarea>
+  <div id="chat-input-wrapper" class="chat-input-wrapper">
+    <div id="chat-attachments-container" class="chat-attachments-container">
+      <!-- Attachments will appear here -->
+    </div>
+
+    <div class="chat-input-row">
+      <div id="chat-input-container" class="chat-input-container">
+        <textarea id="demo-textarea" placeholder="Type your message... Try @analytics, @client, or temporal words like 'yesterday'" rows="1"></textarea>
+      </div>
+      <div id="chat-input-submit" class="chat-input-submit">
+        <button id="submit-button" class="submit-button" title="Send message">
+          <span class="material-icons-outlined">send</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -92,6 +106,55 @@
     }, 1000);
 
     console.log('[Demo] TrustQuery initialized:', editor);
+
+    // Auto-grow textarea functionality
+    const textarea = document.getElementById('demo-textarea');
+    const chatInputWrapper = document.getElementById('chat-input-wrapper');
+    const attachmentsContainer = document.getElementById('chat-attachments-container');
+
+    function autoGrowTextarea() {
+      // Reset height to calculate new height
+      textarea.style.height = 'auto';
+
+      // Calculate new height (max 300px)
+      const newHeight = Math.min(textarea.scrollHeight, 300);
+      textarea.style.height = newHeight + 'px';
+    }
+
+    // Listen for input changes
+    textarea.addEventListener('input', autoGrowTextarea);
+
+    // Listen for keyboard events (for line breaks)
+    textarea.addEventListener('keydown', (e) => {
+      // Trigger resize after Enter key
+      if (e.key === 'Enter' && !e.shiftKey) {
+        setTimeout(autoGrowTextarea, 0);
+      }
+    });
+
+    // Initial size
+    autoGrowTextarea();
+
+    // Demo: Toggle attachments (for testing)
+    window.toggleAttachment = () => {
+      attachmentsContainer.classList.toggle('has-attachments');
+      if (attachmentsContainer.classList.contains('has-attachments')) {
+        attachmentsContainer.innerHTML = '<div style="background: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 12px;">📎 attachment.pdf</div>';
+      } else {
+        attachmentsContainer.innerHTML = '';
+      }
+    };
+
+    // Submit button functionality
+    document.getElementById('submit-button').addEventListener('click', () => {
+      const message = textarea.value.trim();
+      if (message) {
+        helpModal.logEvent(`Message sent: "${message}"`);
+        // Clear textarea
+        textarea.value = '';
+        autoGrowTextarea();
+      }
+    });
   </script>
 </body>
 </html>
