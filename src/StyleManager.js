@@ -96,7 +96,7 @@ export default class StyleManager {
       color: this.options.textColor, // Set color for caret visibility
       WebkitTextFillColor: 'transparent', // Make text transparent but keep caret
       caretColor: this.options.caretColor,
-      resize: 'vertical',
+      resize: 'none',
       width: '100%',
       boxSizing: 'border-box',
       position: 'relative',
@@ -204,10 +204,10 @@ export default class StyleManager {
   applyBubbleStyles(bubble) {
     Object.assign(bubble.style, {
       position: 'absolute',
-      background: this.options.backgroundColor,
+      background: '#ffffff',
       border: `1px solid ${this.options.borderColor}`,
       borderRadius: '6px',
-      padding: '8px 12px',
+      padding: '0',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
       zIndex: '10000',
       maxWidth: '300px',
@@ -216,11 +216,57 @@ export default class StyleManager {
       lineHeight: '1.4',
       color: this.options.textColor,
       pointerEvents: 'auto',
+      opacity: '1',
+      overflow: 'hidden',
       animation: 'tq-bubble-appear 0.15s ease-out'
     });
 
     // Add animation keyframes if not already added
     this.ensureAnimationStyles();
+
+    // Style the content container
+    const contentContainer = bubble.querySelector('.tq-bubble-content');
+    if (contentContainer) {
+      Object.assign(contentContainer.style, {
+        padding: '8px 12px',
+        fontSize: '12px',
+        lineHeight: '1.4'
+      });
+    }
+  }
+
+  /**
+   * Apply bubble header styles
+   * @param {HTMLElement} header - Header container element
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  applyBubbleHeaderStyles(header, messageState) {
+    const colorMap = {
+      'error': '#991b1b',
+      'warning': '#92400e',
+      'info': '#065f46'
+    };
+
+    const bgColorMap = {
+      'error': '#fee2e2',
+      'warning': '#fef3c7',
+      'info': '#d1fae5'
+    };
+
+    const color = colorMap[messageState] || '#2b6cb0';
+    const bgColor = bgColorMap[messageState] || '#e0f2fe';
+
+    Object.assign(header.style, {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '10px 12px',
+      backgroundColor: bgColor,
+      color: color,
+      fontWeight: '600',
+      fontSize: '13px',
+      borderBottom: `1px solid ${this.options.borderColor}`
+    });
   }
 
   /**
@@ -230,7 +276,7 @@ export default class StyleManager {
   applyDropdownStyles(dropdown) {
     Object.assign(dropdown.style, {
       position: 'absolute',
-      background: this.options.backgroundColor,
+      background: '#ffffff',
       border: `1px solid ${this.options.borderColor}`,
       borderRadius: '6px',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -240,10 +286,45 @@ export default class StyleManager {
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       fontSize: '14px',
+      opacity: '1',
       animation: 'tq-dropdown-appear 0.15s ease-out'
     });
 
     this.ensureAnimationStyles();
+  }
+
+  /**
+   * Apply dropdown header styles
+   * @param {HTMLElement} header - Header container element
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  applyDropdownHeaderStyles(header, messageState) {
+    const colorMap = {
+      'error': '#991b1b',
+      'warning': '#92400e',
+      'info': '#065f46'
+    };
+
+    const bgColorMap = {
+      'error': '#fee2e2',
+      'warning': '#fef3c7',
+      'info': '#d1fae5'
+    };
+
+    const color = colorMap[messageState] || '#2b6cb0';
+    const bgColor = bgColorMap[messageState] || '#e0f2fe';
+
+    Object.assign(header.style, {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '10px 12px',
+      backgroundColor: bgColor,
+      color: color,
+      fontWeight: '600',
+      fontSize: '13px',
+      borderBottom: `1px solid ${this.options.borderColor}`
+    });
   }
 
   /**

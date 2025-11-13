@@ -55,6 +55,10 @@ export default class DropdownManager {
       this.options.styleManager.applyDropdownStyles(dropdown);
     }
 
+    // Add header container based on message-state
+    const messageState = matchData.intent?.handler?.['message-state'] || 'info';
+    this.createHeaderContainer(dropdown, messageState);
+
     // Check if filter is enabled
     const hasFilter = matchData.intent?.handler?.filter === true;
 
@@ -92,6 +96,43 @@ export default class DropdownManager {
     }, 0);
 
     console.log('[DropdownManager] Dropdown shown with', options.length, 'options');
+  }
+
+  /**
+   * Create header container for dropdown
+   * @param {HTMLElement} dropdown - Dropdown element
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  createHeaderContainer(dropdown, messageState) {
+    const headerContainer = document.createElement('div');
+    headerContainer.className = 'bubble-header-container';
+    headerContainer.setAttribute('data-type', messageState);
+
+    // Create image
+    const img = document.createElement('img');
+    img.src = `./assets/trustquery-${messageState}.svg`;
+    img.style.height = '24px';
+    img.style.width = 'auto';
+
+    // Create text span
+    const span = document.createElement('span');
+    const textMap = {
+      'error': 'TrustQuery Error',
+      'warning': 'TrustQuery Warning',
+      'info': 'TrustQuery Quick Action'
+    };
+    span.textContent = textMap[messageState] || 'TrustQuery';
+
+    // Append to header
+    headerContainer.appendChild(img);
+    headerContainer.appendChild(span);
+
+    // Apply styles to header via StyleManager
+    if (this.options.styleManager) {
+      this.options.styleManager.applyDropdownHeaderStyles(headerContainer, messageState);
+    }
+
+    dropdown.appendChild(headerContainer);
   }
 
   /**

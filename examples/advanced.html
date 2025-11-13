@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TrustQuery - Interactive Textarea Demo</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/trustquery-logo.svg">
   <link rel="stylesheet" href="./demo.css">
   <link rel="stylesheet" href="./modal.css">
 </head>
@@ -28,14 +29,17 @@
       <!-- Attachments will appear here -->
     </div>
 
-    <div class="chat-input-row">
+    <div class="chat-input-content">
       <div id="chat-input-container" class="chat-input-container">
         <textarea id="demo-textarea" placeholder="Type your message... Try @analytics, @client, or temporal words like 'yesterday'" rows="1"></textarea>
       </div>
-      <div id="chat-input-submit" class="chat-input-submit">
-        <button id="submit-button" class="submit-button" title="Send message">
-          <span class="material-icons-outlined">send</span>
-        </button>
+
+      <div class="chat-actions-row">
+        <div id="chat-input-submit" class="chat-input-submit">
+          <button id="submit-button" class="submit-button" title="Send message">
+            <span class="material-icons-outlined">send</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

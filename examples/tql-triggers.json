@@ -8,6 +8,7 @@
         "handler": {
           "highlight-concept": true,
           "block-submit": true,
+          "message-state": "error",
           "message": "PII info, like emails, are not allowed"
         }
       }
@@ -17,7 +18,6 @@
         "type": "match",
         "category": "temporal",
         "match": [
-          "yesterday",
           "last week",
           "today",
           "past week",
@@ -26,7 +26,44 @@
         ],
         "handler": {
           "highlight-concept": true,
+          "message-state": "warning",
           "message": "Dates can be ambiguous. Using {{user-timezone}}, but check whether the database time might cause confusion"
+        }
+      },
+      {
+        "type": "match",
+        "category": "display-menu",
+        "match": ["yesterday"],
+        "handler": {
+          "highlight-concept": true,
+          "message-state": "warning",
+          "message": "Dates can be ambiguous. Please select your timezone.",
+          "options": [
+            {
+              "label": "Pacific Standard Time (PST)",
+              "on-select": {
+                "display": "yesterday (PST)"
+              }
+            },
+            {
+              "label": "Mountain Standard Time (MST)",
+              "on-select": {
+                "display": "yesterday (MST)"
+              }
+            },
+            {
+              "label": "Central Standard Time (CST)",
+              "on-select": {
+                "display": "yesterday (CST)"
+              }
+            },
+            {
+              "label": "Eastern Standard Time (EST)",
+              "on-select": {
+                "display": "yesterday (EST)"
+              }
+            }
+          ]
         }
       }
     ],
@@ -37,6 +74,7 @@
         "match": ["@analytics"],
         "handler": {
           "highlight-concept": true,
+          "message-state": "info",
           "message": "Showing available analytics",
           "options": [
             {
@@ -71,6 +109,7 @@
         "handler": {
           "highlight-concept": true,
           "filter": true,
+          "message-state": "info",
           "message": "Dates can be ambiguous. Using {{user-timezone}}, but check whether the database time might cause confusion",
           "options": [
             {

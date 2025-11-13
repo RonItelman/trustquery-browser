@@ -38,7 +38,16 @@ export default class BubbleManager {
     // Create bubble
     const bubble = document.createElement('div');
     bubble.className = 'tq-bubble';
-    bubble.innerHTML = content;
+
+    // Add header container based on message-state
+    const messageState = matchData.intent?.handler?.['message-state'] || 'info';
+    this.createBubbleHeader(bubble, messageState);
+
+    // Add content container
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'tq-bubble-content';
+    contentContainer.innerHTML = content;
+    bubble.appendChild(contentContainer);
 
     // Apply inline styles via StyleManager
     if (this.options.styleManager) {
@@ -61,6 +70,43 @@ export default class BubbleManager {
   }
 
   /**
+   * Create header container for bubble
+   * @param {HTMLElement} bubble - Bubble element
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  createBubbleHeader(bubble, messageState) {
+    const headerContainer = document.createElement('div');
+    headerContainer.className = 'bubble-header-container';
+    headerContainer.setAttribute('data-type', messageState);
+
+    // Create image
+    const img = document.createElement('img');
+    img.src = `./assets/trustquery-${messageState}.svg`;
+    img.style.height = '24px';
+    img.style.width = 'auto';
+
+    // Create text span
+    const span = document.createElement('span');
+    const textMap = {
+      'error': 'TrustQuery Error',
+      'warning': 'TrustQuery Warning',
+      'info': 'TrustQuery Quick Action'
+    };
+    span.textContent = textMap[messageState] || 'TrustQuery';
+
+    // Append to header
+    headerContainer.appendChild(img);
+    headerContainer.appendChild(span);
+
+    // Apply styles to header via StyleManager
+    if (this.options.styleManager) {
+      this.options.styleManager.applyBubbleHeaderStyles(headerContainer, messageState);
+    }
+
+    bubble.appendChild(headerContainer);
+  }
+
+  /**
    * Hide current bubble
    */
   hideBubble() {
@@ -79,30 +125,11 @@ export default class BubbleManager {
     // Check for new simplified format first (intent.handler.message)
     if (matchData.intent && matchData.intent.handler) {
       const handler = matchData.intent.handler;
-      const messageState = handler['message-state'];
       const message = handler.message || handler['message-content'] || matchData.intent.description;
 
       if (message) {
-        // Build bubble HTML based on message-state
-        const stateConfig = {
-          'error': { icon: '⛔', title: 'Not Allowed', color: '#991b1b' },
-          'warning': { icon: '⚠️', title: 'Warning', color: '#92400e' },
-          'info': { icon: 'ℹ️', title: 'Info', color: '#065f46' }
-        };
-
-        const config = stateConfig[messageState] || { icon: 'ℹ️', title: 'Info', color: '#2b6cb0' };
-
-        return `
-          <div style="color: ${config.color};">
-            <div style="font-weight: 600; margin-bottom: 4px; display: flex; align-items: center;">
-              <span style="margin-right: 6px;">${config.icon}</span>
-              ${config.title}
-            </div>
-            <div style="font-size: 12px; line-height: 1.4;">
-              ${this.escapeHtml(message)}
-            </div>
-          </div>
-        `;
+        // Return just the message text - header is added separately
+        return this.escapeHtml(message);
       }
     }
 
@@ -141,19 +168,18 @@ export default class BubbleManager {
     const rect = matchEl.getBoundingClientRect();
     const bubbleRect = bubble.getBoundingClientRect();
 
-    // Position below match by default
-    let top = rect.bottom + window.scrollY + 8;
+    // Position above match by default (since input is at bottom)
+    let top = rect.top + window.scrollY - bubbleRect.height - 8;
     let left = rect.left + window.scrollX;
+
+    // If bubble goes off top edge, position below instead
+    if (top < window.scrollY) {
+      top = rect.bottom + window.scrollY + 8;
+    }
 
     // Check if bubble goes off right edge
     if (left + bubbleRect.width > window.innerWidth) {
       left = window.innerWidth - bubbleRect.width - 10;
-    }
-
-    // Check if bubble goes off bottom edge
-    if (top + bubbleRect.height > window.innerHeight + window.scrollY) {
-      // Position above instead
-      top = rect.top + window.scrollY - bubbleRect.height - 8;
     }
 
     bubble.style.top = `${top}px`;
