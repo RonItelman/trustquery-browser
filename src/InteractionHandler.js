@@ -34,7 +34,8 @@ export default class InteractionHandler {
     this.dropdownManager = new DropdownManager({
       styleManager: this.options.styleManager,
       textarea: this.options.textarea,
-      onWordClick: this.options.onWordClick
+      onWordClick: this.options.onWordClick,
+      dropdownOffset: this.options.dropdownOffset
     });
 
     console.log('[InteractionHandler] Initialized');

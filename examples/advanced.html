@@ -79,9 +79,10 @@
     // Update help modal with editor reference
     helpModal.editor = editor;
 
-    // Store globally for debugging
-    window.editor = editor;
-    window.helpModal = helpModal;
+    // Store globally for debugging under trustquery namespace
+    window.trustquery = window.trustquery || {};
+    window.trustquery.editor = editor;
+    window.trustquery.helpModal = helpModal;
 
     // Setup help button
     document.getElementById('help-button').addEventListener('click', () => {
@@ -140,7 +141,7 @@
     autoGrowTextarea();
 
     // Demo: Toggle attachments (for testing)
-    window.toggleAttachment = () => {
+    window.trustquery.toggleAttachment = () => {
       attachmentsContainer.classList.toggle('has-attachments');
       if (attachmentsContainer.classList.contains('has-attachments')) {
         attachmentsContainer.innerHTML = '<div style="background: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 12px;">📎 attachment.pdf</div>';

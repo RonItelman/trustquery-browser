@@ -264,7 +264,7 @@ export default class StyleManager {
       backgroundColor: bgColor,
       color: color,
       fontWeight: '600',
-      fontSize: '13px',
+      fontSize: '11px',
       borderBottom: `1px solid ${this.options.borderColor}`
     });
   }
@@ -322,7 +322,23 @@ export default class StyleManager {
       backgroundColor: bgColor,
       color: color,
       fontWeight: '600',
-      fontSize: '13px',
+      fontSize: '11px',
+      borderBottom: `1px solid ${this.options.borderColor}`
+    });
+  }
+
+  /**
+   * Apply dropdown description styles
+   * @param {HTMLElement} description - Description element
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  applyDropdownDescriptionStyles(description, messageState) {
+    Object.assign(description.style, {
+      padding: '8px 12px',
+      fontSize: '12px',
+      lineHeight: '1.5',
+      color: '#4a5568',
+      backgroundColor: '#f7fafc',
       borderBottom: `1px solid ${this.options.borderColor}`
     });
   }
@@ -349,6 +365,40 @@ export default class StyleManager {
 
     item.addEventListener('mousedown', () => {
       item.style.backgroundColor = '#e2e8f0';
+    });
+  }
+
+  /**
+   * Apply user input styles
+   * @param {HTMLElement} container - User input container
+   * @param {HTMLElement} input - Input element
+   */
+  applyUserInputStyles(container, input) {
+    Object.assign(container.style, {
+      padding: '8px 12px',
+      backgroundColor: '#f7fafc',
+      borderTop: `1px solid ${this.options.borderColor}`
+    });
+
+    Object.assign(input.style, {
+      width: '100%',
+      padding: '8px 12px',
+      border: `1px solid ${this.options.borderColor}`,
+      borderRadius: '4px',
+      fontSize: '14px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      color: this.options.textColor,
+      backgroundColor: '#ffffff',
+      boxSizing: 'border-box',
+      outline: 'none'
+    });
+
+    input.addEventListener('focus', () => {
+      input.style.borderColor = this.options.borderColorFocus;
+    });
+
+    input.addEventListener('blur', () => {
+      input.style.borderColor = this.options.borderColor;
     });
   }
 

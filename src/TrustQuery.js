@@ -67,6 +67,7 @@ export default class TrustQuery {
       autoLoadCommandMap: options.autoLoadCommandMap !== false, // default true
       theme: options.theme || 'light',
       bubbleDelay: options.bubbleDelay || 200,
+      dropdownOffset: options.dropdownOffset || 28, // Distance from trigger word to dropdown (px)
       onWordClick: options.onWordClick || null,
       onWordHover: options.onWordHover || null,
 
@@ -120,6 +121,7 @@ export default class TrustQuery {
     // Initialize interaction handler
     this.interactionHandler = new InteractionHandler(this.overlay, {
       bubbleDelay: this.options.bubbleDelay,
+      dropdownOffset: this.options.dropdownOffset,
       onWordClick: this.options.onWordClick,
       onWordHover: this.options.onWordHover,
       styleManager: this.styleManager, // Pass style manager for bubbles/dropdowns

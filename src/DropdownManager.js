@@ -10,6 +10,7 @@ export default class DropdownManager {
       styleManager: options.styleManager || null,
       textarea: options.textarea || null,
       onWordClick: options.onWordClick || null,
+      dropdownOffset: options.dropdownOffset || 10, // Configurable offset from trigger word
       ...options
     };
 
@@ -20,7 +21,7 @@ export default class DropdownManager {
     this.selectedDropdownIndex = 0;
     this.keyboardHandler = null;
 
-    console.log('[DropdownManager] Initialized');
+    console.log('[DropdownManager] Initialized with offset:', this.options.dropdownOffset);
   }
 
   /**
@@ -58,6 +59,12 @@ export default class DropdownManager {
     // Add header container based on message-state
     const messageState = matchData.intent?.handler?.['message-state'] || 'info';
     this.createHeaderContainer(dropdown, messageState);
+
+    // Add description row if message exists
+    const message = matchData.intent?.handler?.message;
+    if (message) {
+      this.createDescriptionRow(dropdown, message, messageState);
+    }
 
     // Check if filter is enabled
     const hasFilter = matchData.intent?.handler?.filter === true;
@@ -117,9 +124,9 @@ export default class DropdownManager {
     // Create text span
     const span = document.createElement('span');
     const textMap = {
-      'error': 'TrustQuery Error',
-      'warning': 'TrustQuery Warning',
-      'info': 'TrustQuery Quick Action'
+      'error': 'TrustQuery Stop',
+      'warning': 'TrustQuery Clarify',
+      'info': 'TrustQuery Quick Link'
     };
     span.textContent = textMap[messageState] || 'TrustQuery';
 
@@ -133,6 +140,25 @@ export default class DropdownManager {
     }
 
     dropdown.appendChild(headerContainer);
+  }
+
+  /**
+   * Create description row for dropdown
+   * @param {HTMLElement} dropdown - Dropdown element
+   * @param {string} message - Description message
+   * @param {string} messageState - Message state (error, warning, info)
+   */
+  createDescriptionRow(dropdown, message, messageState) {
+    const descriptionRow = document.createElement('div');
+    descriptionRow.className = 'tq-dropdown-description';
+    descriptionRow.textContent = message;
+
+    // Apply styles to description via StyleManager
+    if (this.options.styleManager) {
+      this.options.styleManager.applyDropdownDescriptionStyles(descriptionRow, messageState);
+    }
+
+    dropdown.appendChild(descriptionRow);
   }
 
   /**
@@ -210,6 +236,12 @@ export default class DropdownManager {
    */
   createDropdownItems(dropdown, options, matchData) {
     options.forEach((option, index) => {
+      // Check if this is a user-input option
+      if (typeof option === 'object' && option['user-input'] === true) {
+        this.createUserInputOption(dropdown, option, matchData);
+        return;
+      }
+
       const item = document.createElement('div');
       item.className = 'tq-dropdown-item';
       item.textContent = typeof option === 'string' ? option : option.label || option.value;
@@ -231,6 +263,58 @@ export default class DropdownManager {
       });
       dropdown.appendChild(item);
     });
+  }
+
+  /**
+   * Create user input option
+   * @param {HTMLElement} dropdown - Dropdown element
+   * @param {Object} option - Option with user-input flag
+   * @param {Object} matchData - Match data
+   */
+  createUserInputOption(dropdown, option, matchData) {
+    const container = document.createElement('div');
+    container.className = 'tq-dropdown-user-input-container';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tq-dropdown-user-input';
+    input.placeholder = option.placeholder || 'Enter custom value...';
+
+    container.appendChild(input);
+
+    // Apply styles via StyleManager
+    if (this.options.styleManager) {
+      this.options.styleManager.applyUserInputStyles(container, input);
+    }
+
+    // Handle submit on Enter key
+    const handleSubmit = () => {
+      const value = input.value.trim();
+      if (value) {
+        const customOption = {
+          label: value,
+          'on-select': {
+            display: value
+          }
+        };
+        this.handleDropdownSelect(customOption, matchData);
+        this.hideDropdown();
+      }
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSubmit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.hideDropdown();
+      }
+    });
+
+    dropdown.appendChild(container);
   }
 
   /**
@@ -267,20 +351,20 @@ export default class DropdownManager {
   positionDropdown(dropdown, matchEl) {
     const rect = matchEl.getBoundingClientRect();
     const dropdownRect = dropdown.getBoundingClientRect();
+    const offset = this.options.dropdownOffset;
 
-    // Position below match by default
-    let top = rect.bottom + window.scrollY + 8;
+    // Position above match by default (since input is at bottom)
+    let top = rect.top + window.scrollY - dropdownRect.height - offset;
     let left = rect.left + window.scrollX;
+
+    // If dropdown goes off top edge, position below instead
+    if (top < window.scrollY) {
+      top = rect.bottom + window.scrollY + offset;
+    }
 
     // Check if dropdown goes off right edge
     if (left + dropdownRect.width > window.innerWidth) {
       left = window.innerWidth - dropdownRect.width - 10;
-    }
-
-    // Check if dropdown goes off bottom edge
-    if (top + dropdownRect.height > window.innerHeight + window.scrollY) {
-      // Position above instead
-      top = rect.top + window.scrollY - dropdownRect.height - 8;
     }
 
     dropdown.style.top = `${top}px`;

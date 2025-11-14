@@ -88,9 +88,9 @@ export default class BubbleManager {
     // Create text span
     const span = document.createElement('span');
     const textMap = {
-      'error': 'TrustQuery Error',
-      'warning': 'TrustQuery Warning',
-      'info': 'TrustQuery Quick Action'
+      'error': 'TrustQuery Stop',
+      'warning': 'TrustQuery Clarify',
+      'info': 'TrustQuery Quick Link'
     };
     span.textContent = textMap[messageState] || 'TrustQuery';
 

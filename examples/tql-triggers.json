@@ -37,31 +37,35 @@
         "handler": {
           "highlight-concept": true,
           "message-state": "warning",
-          "message": "Dates can be ambiguous. Please select your timezone.",
+          "message": "Please confirm your current time:",
           "options": [
             {
-              "label": "Pacific Standard Time (PST)",
+              "label": "Thu Nov 13, 7:29AM PST (selected)",
               "on-select": {
                 "display": "yesterday (PST)"
               }
             },
             {
-              "label": "Mountain Standard Time (MST)",
+              "label": "Thu Nov 13, 8:29AM MST",
               "on-select": {
                 "display": "yesterday (MST)"
               }
             },
             {
-              "label": "Central Standard Time (CST)",
+              "label": "Thu Nov 13, 9:29AM CST",
               "on-select": {
                 "display": "yesterday (CST)"
               }
             },
             {
-              "label": "Eastern Standard Time (EST)",
+              "label": "Thu Nov 13, 10:29AM EST",
               "on-select": {
                 "display": "yesterday (EST)"
               }
+            },
+            {
+              "label": "Custom time...",
+              "user-input": true
             }
           ]
         }
