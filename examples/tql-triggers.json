@@ -42,25 +42,25 @@
             {
               "label": "Thu Nov 13, 7:29AM PST (selected)",
               "on-select": {
-                "display": "yesterday (PST)"
+                "display": "Current Time: Thu Nov 13, 7:29AM PST"
               }
             },
             {
               "label": "Thu Nov 13, 8:29AM MST",
               "on-select": {
-                "display": "yesterday (MST)"
+                "display": "Current Time: Thu Nov 13, 8:29AM MST"
               }
             },
             {
               "label": "Thu Nov 13, 9:29AM CST",
               "on-select": {
-                "display": "yesterday (CST)"
+                "display": "Current Time: Thu Nov 13, 9:29AM CST"
               }
             },
             {
               "label": "Thu Nov 13, 10:29AM EST",
               "on-select": {
-                "display": "yesterday (EST)"
+                "display": "Current Time: Thu Nov 13, 10:29AM EST"
               }
             },
             {
@@ -114,7 +114,7 @@
           "highlight-concept": true,
           "filter": true,
           "message-state": "info",
-          "message": "Dates can be ambiguous. Using {{user-timezone}}, but check whether the database time might cause confusion",
+          "message": "Select a client from the list below:",
           "options": [
             {
               "label": "Blackrock",

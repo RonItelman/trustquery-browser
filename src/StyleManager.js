@@ -374,31 +374,35 @@ export default class StyleManager {
    * @param {HTMLElement} input - Input element
    */
   applyUserInputStyles(container, input) {
+    // Container is now a tq-dropdown-item, so don't add padding here
+    // Just set the border and background
     Object.assign(container.style, {
-      padding: '8px 12px',
-      backgroundColor: '#f7fafc',
-      borderTop: `1px solid ${this.options.borderColor}`
+      backgroundColor: 'transparent',
+      borderTop: `1px solid ${this.options.borderColor}`,
+      // Override cursor from dropdown-item styles
+      cursor: 'text'
     });
 
     Object.assign(input.style, {
       width: '100%',
       padding: '8px 12px',
-      border: `1px solid ${this.options.borderColor}`,
-      borderRadius: '4px',
+      border: 'none',
+      borderBottom: '1px solid #ccc',
+      borderRadius: '0',
       fontSize: '14px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       color: this.options.textColor,
-      backgroundColor: '#ffffff',
+      backgroundColor: 'transparent',
       boxSizing: 'border-box',
       outline: 'none'
     });
 
     input.addEventListener('focus', () => {
-      input.style.borderColor = this.options.borderColorFocus;
+      input.style.borderBottom = '1px solid #ccc';
     });
 
     input.addEventListener('blur', () => {
-      input.style.borderColor = this.options.borderColor;
+      input.style.borderBottom = '1px solid #ccc';
     });
   }
 

@@ -53,25 +53,43 @@
     // Initialize Help Modal Manager
     const helpModal = new HelpModalManager(null); // Pass null initially, update after editor loads
 
-    // Initialize TrustQuery
+    // Initialize TrustQuery with new API
     const editor = TrustQuery.init('demo-textarea', {
-      commandMapUrl: './tql-triggers.json',
-      autoLoadCommandMap: true,
-      bubbleDelay: 300,
-
-      onWordHover: (matchData) => {
-        const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
-        helpModal.logEvent(`Hovered: "${matchData.text}" (${messageState})`);
+      // Trigger map configuration
+      triggerMap: {
+        source: 'url',
+        url: './tql-triggers.json'
       },
 
-      onWordClick: (matchData) => {
-        const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
-        helpModal.logEvent(`Clicked: "${matchData.text}" (${messageState})`);
-        if (matchData.selectedOption) {
-          const label = typeof matchData.selectedOption === 'string'
-            ? matchData.selectedOption
-            : matchData.selectedOption.label;
-          helpModal.logEvent(`  → Selected: ${label}`);
+      // Built-in features
+      features: {
+        autoGrow: true,
+        maxHeight: 300,
+        debug: false
+      },
+
+      // UI settings
+      ui: {
+        bubbleDelay: 300,
+        dropdownOffset: 28
+      },
+
+      // Event hooks (optional - for help modal logging)
+      events: {
+        onWordHover: (matchData) => {
+          const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
+          helpModal.logEvent(`Hovered: "${matchData.text}" (${messageState})`);
+        },
+
+        onWordClick: (matchData) => {
+          const messageState = matchData.intent?.handler?.['message-state'] || 'unknown';
+          helpModal.logEvent(`Clicked: "${matchData.text}" (${messageState})`);
+          if (matchData.selectedOption) {
+            const label = typeof matchData.selectedOption === 'string'
+              ? matchData.selectedOption
+              : matchData.selectedOption.label;
+            helpModal.logEvent(`  → Selected: ${label}`);
+          }
         }
       }
     });
@@ -112,35 +130,8 @@
 
     console.log('[Demo] TrustQuery initialized:', editor);
 
-    // Auto-grow textarea functionality
-    const textarea = document.getElementById('demo-textarea');
-    const chatInputWrapper = document.getElementById('chat-input-wrapper');
-    const attachmentsContainer = document.getElementById('chat-attachments-container');
-
-    function autoGrowTextarea() {
-      // Reset height to calculate new height
-      textarea.style.height = 'auto';
-
-      // Calculate new height (max 300px)
-      const newHeight = Math.min(textarea.scrollHeight, 300);
-      textarea.style.height = newHeight + 'px';
-    }
-
-    // Listen for input changes
-    textarea.addEventListener('input', autoGrowTextarea);
-
-    // Listen for keyboard events (for line breaks)
-    textarea.addEventListener('keydown', (e) => {
-      // Trigger resize after Enter key
-      if (e.key === 'Enter' && !e.shiftKey) {
-        setTimeout(autoGrowTextarea, 0);
-      }
-    });
-
-    // Initial size
-    autoGrowTextarea();
-
     // Demo: Toggle attachments (for testing)
+    const attachmentsContainer = document.getElementById('chat-attachments-container');
     window.trustquery.toggleAttachment = () => {
       attachmentsContainer.classList.toggle('has-attachments');
       if (attachmentsContainer.classList.contains('has-attachments')) {
@@ -151,13 +142,15 @@
     };
 
     // Submit button functionality
+    const textarea = document.getElementById('demo-textarea');
     document.getElementById('submit-button').addEventListener('click', () => {
       const message = textarea.value.trim();
       if (message) {
         helpModal.logEvent(`Message sent: "${message}"`);
-        // Clear textarea
+        // Clear textarea (AutoGrow will handle height adjustment automatically)
         textarea.value = '';
-        autoGrowTextarea();
+        // Trigger input event to let AutoGrow adjust height
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
   </script>

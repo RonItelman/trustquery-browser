@@ -273,7 +273,8 @@ export default class DropdownManager {
    */
   createUserInputOption(dropdown, option, matchData) {
     const container = document.createElement('div');
-    container.className = 'tq-dropdown-user-input-container';
+    container.className = 'tq-dropdown-user-input-container tq-dropdown-item';
+    container.setAttribute('data-user-input', 'true');
 
     const input = document.createElement('input');
     input.type = 'text';
@@ -286,6 +287,12 @@ export default class DropdownManager {
     if (this.options.styleManager) {
       this.options.styleManager.applyUserInputStyles(container, input);
     }
+
+    // Click on container focuses input
+    container.addEventListener('click', (e) => {
+      e.stopPropagation();
+      input.focus();
+    });
 
     // Handle submit on Enter key
     const handleSubmit = () => {
@@ -311,6 +318,18 @@ export default class DropdownManager {
         e.preventDefault();
         e.stopPropagation();
         this.hideDropdown();
+      } else if (e.key === 'ArrowDown') {
+        // Navigate to next item
+        e.preventDefault();
+        e.stopPropagation();
+        this.moveDropdownSelection(1);
+        this.options.textarea.focus();
+      } else if (e.key === 'ArrowUp') {
+        // Navigate to previous item
+        e.preventDefault();
+        e.stopPropagation();
+        this.moveDropdownSelection(-1);
+        this.options.textarea.focus();
       }
     });
 
@@ -463,8 +482,24 @@ export default class DropdownManager {
         item.classList.add('tq-dropdown-item-selected');
         // Scroll into view if needed
         item.scrollIntoView({ block: 'nearest' });
+
+        // If this is a user input item, focus the input
+        if (item.getAttribute('data-user-input') === 'true') {
+          const input = item.querySelector('.tq-dropdown-user-input');
+          if (input) {
+            setTimeout(() => input.focus(), 0);
+          }
+        }
       } else {
         item.classList.remove('tq-dropdown-item-selected');
+
+        // If this is a user input item, blur the input when navigating away
+        if (item.getAttribute('data-user-input') === 'true') {
+          const input = item.querySelector('.tq-dropdown-user-input');
+          if (input) {
+            input.blur();
+          }
+        }
       }
     });
   }
@@ -474,6 +509,19 @@ export default class DropdownManager {
    */
   selectCurrentDropdownItem() {
     if (!this.dropdownOptions || !this.dropdownMatchData) {
+      return;
+    }
+
+    const items = this.activeDropdown.querySelectorAll('.tq-dropdown-item');
+    const selectedItem = items[this.selectedDropdownIndex];
+
+    // Check if this is a user input item
+    if (selectedItem && selectedItem.getAttribute('data-user-input') === 'true') {
+      // Focus the input field instead of selecting
+      const input = selectedItem.querySelector('.tq-dropdown-user-input');
+      if (input) {
+        input.focus();
+      }
       return;
     }
 
@@ -501,10 +549,11 @@ export default class DropdownManager {
       const line = lines[matchData.line];
 
       if (line) {
-        // Replace the trigger text with display text
+        // Append to trigger text with "/" separator
         const before = line.substring(0, matchData.col);
         const after = line.substring(matchData.col + matchData.text.length);
-        lines[matchData.line] = before + displayText + after;
+        const newText = matchData.text + '/' + displayText;
+        lines[matchData.line] = before + newText + after;
 
         // Update textarea
         textarea.value = lines.join('\n');
@@ -513,7 +562,7 @@ export default class DropdownManager {
         const inputEvent = new Event('input', { bubbles: true });
         textarea.dispatchEvent(inputEvent);
 
-        console.log('[DropdownManager] Replaced', matchData.text, 'with', displayText);
+        console.log('[DropdownManager] Appended to', matchData.text, '→', newText);
       }
     }
 

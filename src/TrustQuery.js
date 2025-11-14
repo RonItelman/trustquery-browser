@@ -6,6 +6,7 @@ import CommandScanner from './CommandScanner.js';
 import InteractionHandler from './InteractionHandler.js';
 import StyleManager from './StyleManager.js';
 import CommandHandlerRegistry from './CommandHandlers.js';
+import AutoGrow from './AutoGrow.js';
 
 export default class TrustQuery {
   // Store all instances
@@ -61,37 +62,68 @@ export default class TrustQuery {
    */
   constructor(textarea, options = {}) {
     this.textarea = textarea;
-    this.options = {
-      commandMapUrl: options.commandMapUrl || null,
-      commandMap: options.commandMap || null,
-      autoLoadCommandMap: options.autoLoadCommandMap !== false, // default true
-      theme: options.theme || 'light',
-      bubbleDelay: options.bubbleDelay || 200,
-      dropdownOffset: options.dropdownOffset || 28, // Distance from trigger word to dropdown (px)
-      onWordClick: options.onWordClick || null,
-      onWordHover: options.onWordHover || null,
 
-      // Theme/style options (passed to StyleManager)
-      backgroundColor: options.backgroundColor,
-      textColor: options.textColor,
-      caretColor: options.caretColor,
-      borderColor: options.borderColor,
-      borderColorFocus: options.borderColorFocus,
-      matchBackgroundColor: options.matchBackgroundColor,
-      matchTextColor: options.matchTextColor,
-      matchHoverBackgroundColor: options.matchHoverBackgroundColor,
-      fontFamily: options.fontFamily,
-      fontSize: options.fontSize,
-      lineHeight: options.lineHeight,
-
-      ...options
-    };
+    // Normalize options (support both old and new API)
+    this.options = this.normalizeOptions(options);
 
     this.commandMap = null;
     this.isReady = false;
+    this.features = {};
 
     // Initialize components
     this.init();
+  }
+
+  /**
+   * Normalize options - support both old and new API
+   * @param {Object} options - Raw options
+   * @returns {Object} Normalized options
+   */
+  normalizeOptions(options) {
+    // New API structure
+    const triggerMap = options.triggerMap || {};
+    const features = options.features || {};
+    const ui = options.ui || {};
+    const events = options.events || {};
+
+    // Build normalized config (backward compatible)
+    return {
+      // Trigger map configuration
+      commandMapUrl: triggerMap.url || options.commandMapUrl || null,
+      commandMap: triggerMap.data || options.commandMap || null,
+      autoLoadCommandMap: options.autoLoadCommandMap !== false,
+      triggerMapSource: triggerMap.source || (triggerMap.url ? 'url' : triggerMap.data ? 'inline' : null),
+      triggerMapApi: triggerMap.api || null,
+
+      // Features
+      autoGrow: features.autoGrow || false,
+      autoGrowMaxHeight: features.maxHeight || 300,
+      debug: features.debug || false,
+
+      // UI settings
+      theme: ui.theme || options.theme || 'light',
+      bubbleDelay: ui.bubbleDelay !== undefined ? ui.bubbleDelay : (options.bubbleDelay || 200),
+      dropdownOffset: ui.dropdownOffset !== undefined ? ui.dropdownOffset : (options.dropdownOffset || 28),
+
+      // Events (callbacks)
+      onWordClick: events.onWordClick || options.onWordClick || null,
+      onWordHover: events.onWordHover || options.onWordHover || null,
+
+      // Theme/style options (passed to StyleManager)
+      backgroundColor: ui.backgroundColor || options.backgroundColor,
+      textColor: ui.textColor || options.textColor,
+      caretColor: ui.caretColor || options.caretColor,
+      borderColor: ui.borderColor || options.borderColor,
+      borderColorFocus: ui.borderColorFocus || options.borderColorFocus,
+      matchBackgroundColor: ui.matchBackgroundColor || options.matchBackgroundColor,
+      matchTextColor: ui.matchTextColor || options.matchTextColor,
+      matchHoverBackgroundColor: ui.matchHoverBackgroundColor || options.matchHoverBackgroundColor,
+      fontFamily: ui.fontFamily || options.fontFamily,
+      fontSize: ui.fontSize || options.fontSize,
+      lineHeight: ui.lineHeight || options.lineHeight,
+
+      ...options
+    };
   }
 
   /**
@@ -129,6 +161,9 @@ export default class TrustQuery {
       textarea: this.textarea // Pass textarea for on-select display updates
     });
 
+    // Initialize features
+    this.initializeFeatures();
+
     // Setup textarea event listeners
     this.setupTextareaListeners();
 
@@ -150,6 +185,44 @@ export default class TrustQuery {
     }, 100);
 
     console.log('[TrustQuery] Initialization complete');
+  }
+
+  /**
+   * Initialize optional features based on configuration
+   */
+  initializeFeatures() {
+    // Auto-grow textarea feature
+    if (this.options.autoGrow) {
+      this.features.autoGrow = new AutoGrow(this.textarea, {
+        maxHeight: this.options.autoGrowMaxHeight,
+        minHeight: 44
+      });
+      console.log('[TrustQuery] AutoGrow feature enabled');
+    }
+
+    // Debug logging feature
+    if (this.options.debug) {
+      this.enableDebugLogging();
+      console.log('[TrustQuery] Debug logging enabled');
+    }
+  }
+
+  /**
+   * Enable debug logging for events
+   */
+  enableDebugLogging() {
+    const originalOnWordHover = this.options.onWordHover;
+    const originalOnWordClick = this.options.onWordClick;
+
+    this.options.onWordHover = (matchData) => {
+      console.log('[TrustQuery Debug] Word Hover:', matchData);
+      if (originalOnWordHover) originalOnWordHover(matchData);
+    };
+
+    this.options.onWordClick = (matchData) => {
+      console.log('[TrustQuery Debug] Word Click:', matchData);
+      if (originalOnWordClick) originalOnWordClick(matchData);
+    };
   }
 
   /**
