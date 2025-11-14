@@ -5,6 +5,9 @@
   "type": "module",
   "main": "dist/trustquery.js",
   "module": "dist/trustquery.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./dist/trustquery.js",
