@@ -7,6 +7,7 @@ import InteractionHandler from './InteractionHandler.js';
 import StyleManager from './StyleManager.js';
 import CommandHandlerRegistry from './CommandHandlers.js';
 import AutoGrow from './AutoGrow.js';
+import ValidationStateManager from './ValidationStateManager.js';
 
 export default class TrustQuery {
   // Store all instances
@@ -108,6 +109,7 @@ export default class TrustQuery {
       // Events (callbacks)
       onWordClick: events.onWordClick || options.onWordClick || null,
       onWordHover: events.onWordHover || options.onWordHover || null,
+      onValidationChange: events.onValidationChange || options.onValidationChange || null,
 
       // Theme/style options (passed to StyleManager)
       backgroundColor: ui.backgroundColor || options.backgroundColor,
@@ -159,6 +161,11 @@ export default class TrustQuery {
       styleManager: this.styleManager, // Pass style manager for bubbles/dropdowns
       commandHandlers: this.commandHandlers, // Pass handlers for bubble content
       textarea: this.textarea // Pass textarea for on-select display updates
+    });
+
+    // Initialize validation state manager
+    this.validationStateManager = new ValidationStateManager({
+      onValidationChange: this.options.onValidationChange
     });
 
     // Initialize features
@@ -357,6 +364,11 @@ export default class TrustQuery {
 
     // Update interaction handler with new elements
     this.interactionHandler.update();
+
+    // Update validation state
+    if (this.validationStateManager) {
+      this.validationStateManager.update(matches);
+    }
   }
 
   /**
