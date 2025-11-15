@@ -73,7 +73,19 @@ ui: {
 ```javascript
 events: {
   onWordHover: (matchData) => { /* ... */ },
-  onWordClick: (matchData) => { /* ... */ }
+  onWordClick: (matchData) => { /* ... */ },
+  onValidationChange: (validationState) => {
+    // Fires when validation state changes
+    // validationState: {
+    //   hasBlockingError: boolean,
+    //   errors: Array,    // matches with message-state: 'error'
+    //   warnings: Array,  // matches with message-state: 'warning'
+    //   info: Array       // matches with message-state: 'info'
+    // }
+
+    // Example: Disable submit button on blocking errors
+    submitButton.disabled = validationState.hasBlockingError;
+  }
 }
 ```
 
