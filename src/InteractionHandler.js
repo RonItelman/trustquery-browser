@@ -141,12 +141,37 @@ export default class InteractionHandler {
 
     console.log('[InteractionHandler] Match clicked:', matchData);
 
-    // Only prevent default for interactive elements (dropdown/action)
-    // Let bubbles (error/warning/info messages) pass through for normal cursor positioning
-    if (behavior === 'dropdown' || behavior === 'action') {
+    // For non-interactive elements (bubbles), manually pass click to textarea
+    if (behavior !== 'dropdown' && behavior !== 'action') {
       e.preventDefault();
       e.stopPropagation();
+
+      // Focus textarea and position cursor at click location
+      if (this.options.textarea) {
+        this.options.textarea.focus();
+
+        // Get the character offset by finding the match position
+        const line = parseInt(matchEl.getAttribute('data-line'));
+        const col = parseInt(matchEl.getAttribute('data-col'));
+
+        // Calculate absolute position in textarea
+        const lines = this.options.textarea.value.split('\n');
+        let offset = 0;
+        for (let i = 0; i < line; i++) {
+          offset += lines[i].length + 1; // +1 for newline
+        }
+        offset += col + (e.offsetX / matchEl.offsetWidth * matchEl.textContent.length);
+
+        // Set cursor position
+        this.options.textarea.setSelectionRange(offset, offset);
+      }
+
+      return; // Don't process further for bubbles
     }
+
+    // Prevent default for interactive elements (dropdown/action)
+    e.preventDefault();
+    e.stopPropagation();
 
     // Handle different behaviors
     if (behavior === 'dropdown') {
