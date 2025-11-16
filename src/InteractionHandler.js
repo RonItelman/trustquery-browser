@@ -136,13 +136,17 @@ export default class InteractionHandler {
    * @param {HTMLElement} matchEl - Match element
    */
   handleClick(e, matchEl) {
-    e.preventDefault();
-    e.stopPropagation();
-
     const behavior = matchEl.getAttribute('data-behavior');
     const matchData = this.getMatchData(matchEl);
 
     console.log('[InteractionHandler] Match clicked:', matchData);
+
+    // Only prevent default for interactive elements (dropdown/action)
+    // Let bubbles (error/warning/info messages) pass through for normal cursor positioning
+    if (behavior === 'dropdown' || behavior === 'action') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     // Handle different behaviors
     if (behavior === 'dropdown') {
