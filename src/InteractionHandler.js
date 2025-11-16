@@ -139,16 +139,42 @@ export default class InteractionHandler {
     const behavior = matchEl.getAttribute('data-behavior');
     const matchData = this.getMatchData(matchEl);
 
-    console.log('[InteractionHandler] Match clicked:', matchData);
+    console.log('[InteractionHandler] ===== CLICK EVENT START =====');
+    console.log('[InteractionHandler] Click details:', {
+      behavior: behavior,
+      matchText: matchData.text,
+      eventType: e.type,
+      target: e.target.tagName,
+      currentTarget: e.currentTarget.tagName,
+      button: e.button,
+      buttons: e.buttons,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      offsetX: e.offsetX,
+      offsetY: e.offsetY
+    });
+    console.log('[InteractionHandler] Match element:', {
+      textContent: matchEl.textContent,
+      offsetWidth: matchEl.offsetWidth,
+      offsetHeight: matchEl.offsetHeight,
+      attributes: {
+        'data-line': matchEl.getAttribute('data-line'),
+        'data-col': matchEl.getAttribute('data-col'),
+        'data-behavior': behavior
+      }
+    });
+    console.log('[InteractionHandler] Active element before click:', document.activeElement.tagName, document.activeElement.id || '(no id)');
 
     // For non-interactive elements (bubbles), manually pass click to textarea
     if (behavior !== 'dropdown' && behavior !== 'action') {
+      console.log('[InteractionHandler] Non-interactive match - manually focusing textarea');
       e.preventDefault();
       e.stopPropagation();
 
       // Focus textarea and position cursor at click location
       if (this.options.textarea) {
         this.options.textarea.focus();
+        console.log('[InteractionHandler] Textarea focused. Active element now:', document.activeElement.tagName, document.activeElement.id || '(no id)');
 
         // Get the character offset by finding the match position
         const line = parseInt(matchEl.getAttribute('data-line'));
@@ -160,15 +186,33 @@ export default class InteractionHandler {
         for (let i = 0; i < line; i++) {
           offset += lines[i].length + 1; // +1 for newline
         }
-        offset += col + (e.offsetX / matchEl.offsetWidth * matchEl.textContent.length);
+        const clickOffsetInMatch = (e.offsetX / matchEl.offsetWidth * matchEl.textContent.length);
+        offset += col + clickOffsetInMatch;
+
+        console.log('[InteractionHandler] Cursor positioning:', {
+          line: line,
+          col: col,
+          clickOffsetInMatch: clickOffsetInMatch,
+          finalOffset: offset,
+          textareaValue: this.options.textarea.value,
+          textareaValueLength: this.options.textarea.value.length
+        });
 
         // Set cursor position
         this.options.textarea.setSelectionRange(offset, offset);
+
+        console.log('[InteractionHandler] Selection set:', {
+          selectionStart: this.options.textarea.selectionStart,
+          selectionEnd: this.options.textarea.selectionEnd,
+          selectedText: this.options.textarea.value.substring(this.options.textarea.selectionStart, this.options.textarea.selectionEnd)
+        });
       }
 
+      console.log('[InteractionHandler] ===== CLICK EVENT END (non-interactive) =====');
       return; // Don't process further for bubbles
     }
 
+    console.log('[InteractionHandler] Interactive match - handling dropdown/action');
     // Prevent default for interactive elements (dropdown/action)
     e.preventDefault();
     e.stopPropagation();
@@ -192,6 +236,8 @@ export default class InteractionHandler {
     if (this.options.onWordClick && !(behavior === 'dropdown' && this.dropdownManager.activeDropdownMatch === matchEl)) {
       this.options.onWordClick(matchData);
     }
+
+    console.log('[InteractionHandler] ===== CLICK EVENT END (interactive) =====');
   }
 
   /**

@@ -284,12 +284,121 @@ export default class TrustQuery {
       this.overlay.scrollLeft = this.textarea.scrollLeft;
     });
 
+    // Keyboard event logging for debugging selection issues
+    this.textarea.addEventListener('keydown', (e) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      const isSelectAll = (e.metaKey || e.ctrlKey) && e.key === 'a';
+
+      if (isCmdOrCtrl || isSelectAll) {
+        console.log('[TrustQuery] ===== KEYBOARD EVENT =====');
+        console.log('[TrustQuery] Key pressed:', {
+          key: e.key,
+          code: e.code,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          isSelectAll: isSelectAll
+        });
+        console.log('[TrustQuery] Active element:', document.activeElement.tagName, document.activeElement.id || '(no id)');
+        console.log('[TrustQuery] Textarea state BEFORE:', {
+          value: this.textarea.value,
+          valueLength: this.textarea.value.length,
+          selectionStart: this.textarea.selectionStart,
+          selectionEnd: this.textarea.selectionEnd,
+          selectedText: this.textarea.value.substring(this.textarea.selectionStart, this.textarea.selectionEnd)
+        });
+
+        if (isSelectAll) {
+          // Log state after select all (use setTimeout to let browser process the event)
+          setTimeout(() => {
+            console.log('[TrustQuery] Textarea state AFTER CMD+A:', {
+              selectionStart: this.textarea.selectionStart,
+              selectionEnd: this.textarea.selectionEnd,
+              selectedText: this.textarea.value.substring(this.textarea.selectionStart, this.textarea.selectionEnd),
+              selectedLength: this.textarea.selectionEnd - this.textarea.selectionStart
+            });
+            console.log('[TrustQuery] ===== KEYBOARD EVENT END =====');
+          }, 0);
+        } else {
+          console.log('[TrustQuery] ===== KEYBOARD EVENT END =====');
+        }
+      }
+    });
+
+    // Selection change event
+    this.textarea.addEventListener('select', (e) => {
+      console.log('[TrustQuery] ===== SELECTION CHANGE EVENT =====');
+      console.log('[TrustQuery] Selection:', {
+        selectionStart: this.textarea.selectionStart,
+        selectionEnd: this.textarea.selectionEnd,
+        selectedText: this.textarea.value.substring(this.textarea.selectionStart, this.textarea.selectionEnd),
+        selectedLength: this.textarea.selectionEnd - this.textarea.selectionStart
+      });
+    });
+
+    // Context menu event - prevent keyboard-triggered context menu
+    this.textarea.addEventListener('contextmenu', (e) => {
+      console.log('[TrustQuery] ===== CONTEXTMENU EVENT =====');
+      console.log('[TrustQuery] Context menu triggered:', {
+        type: e.type,
+        isTrusted: e.isTrusted,
+        button: e.button,
+        buttons: e.buttons,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        target: e.target.tagName
+      });
+
+      // Prevent context menu if triggered by keyboard (button === -1)
+      // This prevents the macOS context menu from opening after CMD+A
+      if (e.button === -1 && e.buttons === 0) {
+        console.log('[TrustQuery] Preventing keyboard-triggered context menu');
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      console.log('[TrustQuery] Allowing mouse-triggered context menu');
+    });
+
+    // Also prevent context menu on overlay (it interferes with text selection)
+    this.overlay.addEventListener('contextmenu', (e) => {
+      console.log('[TrustQuery] ===== CONTEXTMENU EVENT ON OVERLAY =====');
+      console.log('[TrustQuery] Context menu on overlay - preventing');
+
+      // Always prevent context menu on overlay
+      // The overlay should be transparent to user interactions
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
     // Focus/blur events - add/remove focus class
-    this.textarea.addEventListener('focus', () => {
+    this.textarea.addEventListener('focus', (e) => {
+      console.log('[TrustQuery] ===== FOCUS EVENT =====');
+      console.log('[TrustQuery] Textarea focused. Active element:', document.activeElement.tagName, document.activeElement.id || '(no id)');
+      console.log('[TrustQuery] Current selection:', {
+        selectionStart: this.textarea.selectionStart,
+        selectionEnd: this.textarea.selectionEnd
+      });
       this.wrapper.classList.add('tq-focused');
     });
 
     this.textarea.addEventListener('blur', (e) => {
+      console.log('[TrustQuery] ===== BLUR EVENT =====');
+      console.log('[TrustQuery] Textarea blurred. Related target:', e.relatedTarget?.tagName || '(none)');
+      console.log('[TrustQuery] Blur event details:', {
+        type: e.type,
+        isTrusted: e.isTrusted,
+        eventPhase: e.eventPhase,
+        target: e.target.tagName,
+        currentTarget: e.currentTarget.tagName
+      });
+      console.log('[TrustQuery] Stack trace at blur:');
+      console.trace();
+
       // Close dropdown when textarea loses focus (unless interacting with dropdown)
       if (this.interactionHandler) {
         // Use setTimeout to let the new focus target be set and check if clicking on dropdown
@@ -299,6 +408,8 @@ export default class TrustQuery {
             activeElement.classList.contains('tq-dropdown-filter') ||
             activeElement.closest('.tq-dropdown') // Check if clicking anywhere in dropdown
           );
+
+          console.log('[TrustQuery] After blur - active element:', activeElement?.tagName || '(none)', 'isDropdownRelated:', isDropdownRelated);
 
           // Only close if not interacting with dropdown
           if (!isDropdownRelated) {
