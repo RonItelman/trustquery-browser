@@ -99,7 +99,7 @@ Create a `tql-triggers.json` file:
     "error": [
       {
         "type": "regex",
-        "regex": ["\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b"],
+        "regex": ["\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"],
         "handler": {
           "block-submit": true,
           "message-state": "error",

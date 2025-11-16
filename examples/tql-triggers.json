@@ -4,7 +4,7 @@
       {
         "type": "regex",
         "category": "pii",
-        "regex": ["\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b"],
+        "regex": ["\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"],
         "handler": {
           "highlight-concept": true,
           "block-submit": true,
