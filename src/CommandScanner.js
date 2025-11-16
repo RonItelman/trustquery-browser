@@ -2,9 +2,10 @@
 // Uses simple string matching (not regex) for simplicity and performance
 
 export default class CommandScanner {
-  constructor() {
+  constructor(options = {}) {
     this.commandMap = null;
     this.commands = [];
+    this.debug = options.debug || false;
     console.log('[CommandScanner] Initialized');
   }
 
@@ -178,6 +179,16 @@ export default class CommandScanner {
         let match;
 
         while ((match = regex.exec(line)) !== null) {
+          if (this.debug) {
+            console.log('[CommandScanner] Regex match debug:', {
+              pattern: command.match,
+              line: line,
+              'match[0]': match[0],
+              'match[0].length': match[0].length,
+              index: match.index
+            });
+          }
+
           matches.push({
             text: match[0],
             line: lineIndex,

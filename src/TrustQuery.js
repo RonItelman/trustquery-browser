@@ -151,7 +151,9 @@ export default class TrustQuery {
     });
 
     // Initialize scanner (will be configured when command map loads)
-    this.scanner = new CommandScanner();
+    this.scanner = new CommandScanner({
+      debug: this.options.debug
+    });
 
     // Initialize interaction handler
     this.interactionHandler = new InteractionHandler(this.overlay, {
@@ -167,7 +169,8 @@ export default class TrustQuery {
 
     // Initialize validation state manager
     this.validationStateManager = new ValidationStateManager({
-      onValidationChange: this.options.onValidationChange
+      onValidationChange: this.options.onValidationChange,
+      debug: this.options.debug
     });
 
     // Initialize features
