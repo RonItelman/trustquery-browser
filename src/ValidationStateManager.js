@@ -26,6 +26,11 @@ export default class ValidationStateManager {
    * @param {Array} matches - Current matches from scanner
    */
   update(matches) {
+    if (this.options.debug) {
+      console.log('[ValidationStateManager] update() called with matches:', matches.length);
+      console.log('[ValidationStateManager] Match details:', JSON.stringify(matches, null, 2));
+    }
+
     // Reset state
     const newState = {
       hasBlockingError: false,
@@ -36,8 +41,17 @@ export default class ValidationStateManager {
 
     // Categorize current matches
     matches.forEach(match => {
-      const messageState = match.intent?.handler?.['message-state'];
-      const blockSubmit = match.intent?.handler?.['block-submit'] === true;
+      const messageState = match.command?.messageState;
+      const blockSubmit = match.command?.handler?.['block-submit'] === true;
+
+      if (this.options.debug) {
+        console.log('[ValidationStateManager] Processing match:', {
+          text: match.text,
+          messageState,
+          blockSubmit,
+          hasCommand: !!match.command
+        });
+      }
 
       if (blockSubmit) {
         newState.hasBlockingError = true;
@@ -55,6 +69,15 @@ export default class ValidationStateManager {
           break;
       }
     });
+
+    if (this.options.debug) {
+      console.log('[ValidationStateManager] After categorization:', {
+        errors: newState.errors.length,
+        warnings: newState.warnings.length,
+        info: newState.info.length,
+        hasBlockingError: newState.hasBlockingError
+      });
+    }
 
     // Check if state changed
     const stateChanged =
