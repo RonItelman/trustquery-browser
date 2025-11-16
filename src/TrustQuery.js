@@ -146,7 +146,8 @@ export default class TrustQuery {
     // Initialize renderer
     this.renderer = new OverlayRenderer(this.overlay, {
       theme: this.options.theme,
-      commandHandlers: this.commandHandlers // Pass handlers for styling
+      commandHandlers: this.commandHandlers, // Pass handlers for styling
+      debug: this.options.debug // Pass debug flag
     });
 
     // Initialize scanner (will be configured when command map loads)
@@ -160,7 +161,8 @@ export default class TrustQuery {
       onWordHover: this.options.onWordHover,
       styleManager: this.styleManager, // Pass style manager for bubbles/dropdowns
       commandHandlers: this.commandHandlers, // Pass handlers for bubble content
-      textarea: this.textarea // Pass textarea for on-select display updates
+      textarea: this.textarea, // Pass textarea for on-select display updates
+      debug: this.options.debug // Pass debug flag
     });
 
     // Initialize validation state manager

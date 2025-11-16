@@ -21,7 +21,9 @@ export default class DropdownManager {
     this.selectedDropdownIndex = 0;
     this.keyboardHandler = null;
 
-    console.log('[DropdownManager] Initialized with offset:', this.options.dropdownOffset);
+    if (this.options.debug) {
+      console.log('[DropdownManager] Initialized with offset:', this.options.dropdownOffset);
+    }
   }
 
   /**
@@ -102,7 +104,9 @@ export default class DropdownManager {
       document.addEventListener('click', this.closeDropdownHandler);
     }, 0);
 
-    console.log('[DropdownManager] Dropdown shown with', options.length, 'options');
+    if (this.options.debug) {
+      console.log('[DropdownManager] Dropdown shown with', options.length, 'options');
+    }
   }
 
   /**
@@ -536,7 +540,9 @@ export default class DropdownManager {
    * @param {Object} matchData - Match data
    */
   handleDropdownSelect(option, matchData) {
-    console.log('[DropdownManager] Dropdown option selected:', option, 'for:', matchData.text);
+    if (this.options.debug) {
+      console.log('[DropdownManager] Dropdown option selected:', option, 'for:', matchData.text);
+    }
 
     // Check if option has on-select.display
     if (option['on-select'] && option['on-select'].display && this.options.textarea) {
@@ -562,7 +568,9 @@ export default class DropdownManager {
         const inputEvent = new Event('input', { bubbles: true });
         textarea.dispatchEvent(inputEvent);
 
-        console.log('[DropdownManager] Appended to', matchData.text, '→', newText);
+        if (this.options.debug) {
+          console.log('[DropdownManager] Appended to', matchData.text, '→', newText);
+        }
       }
     }
 
@@ -587,6 +595,8 @@ export default class DropdownManager {
    */
   destroy() {
     this.cleanup();
-    console.log('[DropdownManager] Destroyed');
+    if (this.options.debug) {
+      console.log('[DropdownManager] Destroyed');
+    }
   }
 }

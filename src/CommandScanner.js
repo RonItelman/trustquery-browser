@@ -103,8 +103,6 @@ export default class CommandScanner {
     // Sort by length (longest first) to match longer patterns first
     commands.sort((a, b) => b.match.length - a.match.length);
 
-    console.log('[CommandScanner] Parsed commands:', commands.length, commands);
-
     return commands;
   }
 
@@ -127,7 +125,11 @@ export default class CommandScanner {
       matches.push(...lineMatches);
     });
 
-    console.log('[CommandScanner] Found', matches.length, 'matches');
+    // Only log when matches are found
+    if (matches.length > 0) {
+      console.log(`[CommandScanner] Found ${matches.length} matches`);
+    }
+
     return matches;
   }
 

@@ -12,10 +12,13 @@ export default class OverlayRenderer {
     this.options = {
       theme: options.theme || 'light',
       commandHandlers: options.commandHandlers || null,
+      debug: options.debug || false,
       ...options
     };
 
-    console.log('[OverlayRenderer] Initialized');
+    if (this.options.debug) {
+      console.log('[OverlayRenderer] Initialized');
+    }
   }
 
   /**
@@ -35,7 +38,9 @@ export default class OverlayRenderer {
     // Update overlay
     this.overlay.innerHTML = linesHTML;
 
-    console.log('[OverlayRenderer] Rendered', lines.length, 'lines with', matches.length, 'matches');
+    if (this.options.debug) {
+      console.log('[OverlayRenderer] Rendered', lines.length, 'lines with', matches.length, 'matches');
+    }
   }
 
   /**

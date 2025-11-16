@@ -28,17 +28,21 @@ export default class InteractionHandler {
     this.bubbleManager = new BubbleManager({
       bubbleDelay: this.options.bubbleDelay,
       styleManager: this.options.styleManager,
-      commandHandlers: this.options.commandHandlers
+      commandHandlers: this.options.commandHandlers,
+      debug: this.options.debug
     });
 
     this.dropdownManager = new DropdownManager({
       styleManager: this.options.styleManager,
       textarea: this.options.textarea,
       onWordClick: this.options.onWordClick,
-      dropdownOffset: this.options.dropdownOffset
+      dropdownOffset: this.options.dropdownOffset,
+      debug: this.options.debug
     });
 
-    console.log('[InteractionHandler] Initialized');
+    if (this.options.debug) {
+      console.log('[InteractionHandler] Initialized');
+    }
   }
 
   /**
@@ -76,7 +80,9 @@ export default class InteractionHandler {
       }
     });
 
-    console.log('[InteractionHandler] Updated with', matches.length, 'interactive elements');
+    if (this.options.debug) {
+      console.log('[InteractionHandler] Updated with', matches.length, 'interactive elements');
+    }
   }
 
   /**
