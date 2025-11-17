@@ -1,5 +1,7 @@
 // DropdownManager - Handles dropdown menus with filtering, keyboard navigation, and selection
 
+import EdgeDetectionHelper from './dropdown-manager-helpers/EdgeDetectionHelper.js';
+
 export default class DropdownManager {
   /**
    * Create dropdown manager
@@ -53,9 +55,10 @@ export default class DropdownManager {
     const dropdown = document.createElement('div');
     dropdown.className = 'tq-dropdown';
 
-    // Apply inline styles via StyleManager
+    // Apply inline styles via StyleManager (pass category for width adjustment)
+    const category = matchData.intent?.category || '';
     if (this.options.styleManager) {
-      this.options.styleManager.applyDropdownStyles(dropdown);
+      this.options.styleManager.applyDropdownStyles(dropdown, category);
     }
 
     // Add header container based on message-state
@@ -239,6 +242,10 @@ export default class DropdownManager {
    * @param {Object} matchData - Match data
    */
   createDropdownItems(dropdown, options, matchData) {
+    // Check if this is a display-menu-with-uri category
+    const category = matchData.intent?.category || '';
+    const hasUriSupport = category === 'display-menu-with-uri';
+
     options.forEach((option, index) => {
       // Check if this is a user-input option
       if (typeof option === 'object' && option['user-input'] === true) {
@@ -248,7 +255,82 @@ export default class DropdownManager {
 
       const item = document.createElement('div');
       item.className = 'tq-dropdown-item';
-      item.textContent = typeof option === 'string' ? option : option.label || option.value;
+
+      // Create label text
+      const labelText = typeof option === 'string' ? option : option.label || option.value;
+
+      // If display-menu-with-uri and option has uri, create label + link icon
+      if (hasUriSupport && typeof option === 'object' && option.uri) {
+        // Create label span
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'tq-dropdown-item-label';
+        labelSpan.textContent = labelText;
+        labelSpan.style.flex = '1';
+        labelSpan.style.cursor = 'pointer';
+
+        // Create link with truncated URI text
+        const linkIcon = document.createElement('a');
+        linkIcon.className = 'tq-dropdown-item-link';
+        linkIcon.href = option.uri;
+        linkIcon.target = '_blank';
+        linkIcon.rel = 'noopener noreferrer';
+
+        // Truncate URI to 20 characters
+        let displayUri = option.uri;
+        if (displayUri.length > 20) {
+          displayUri = displayUri.substring(0, 20) + '...';
+        }
+        linkIcon.textContent = displayUri;
+
+        linkIcon.style.marginLeft = '8px';
+        linkIcon.style.fontSize = '12px';
+        linkIcon.style.color = '#3b82f6';
+        linkIcon.style.textDecoration = 'underline';
+        linkIcon.style.opacity = '0.7';
+        linkIcon.style.transition = 'opacity 0.2s';
+        linkIcon.style.whiteSpace = 'nowrap';
+        linkIcon.title = option.uri;
+        linkIcon.setAttribute('aria-label', `Open ${labelText} documentation`);
+
+        // Hover effect for link icon
+        linkIcon.addEventListener('mouseenter', () => {
+          linkIcon.style.opacity = '1';
+        });
+        linkIcon.addEventListener('mouseleave', () => {
+          linkIcon.style.opacity = '0.6';
+        });
+
+        // Prevent link click from selecting the option
+        linkIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Link will open naturally via href
+        });
+
+        // Set item to flex layout
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.justifyContent = 'space-between';
+
+        item.appendChild(labelSpan);
+        item.appendChild(linkIcon);
+
+        // Only label click should select the option
+        labelSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.handleDropdownSelect(option, matchData);
+          this.hideDropdown();
+        });
+      } else {
+        // Regular option without URI
+        item.textContent = labelText;
+
+        // Click anywhere on item to select
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.handleDropdownSelect(option, matchData);
+          this.hideDropdown();
+        });
+      }
 
       // Highlight first item by default
       if (index === 0) {
@@ -260,11 +342,6 @@ export default class DropdownManager {
         this.options.styleManager.applyDropdownItemStyles(item);
       }
 
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.handleDropdownSelect(option, matchData);
-        this.hideDropdown();
-      });
       dropdown.appendChild(item);
     });
   }
@@ -372,26 +449,49 @@ export default class DropdownManager {
    * @param {HTMLElement} matchEl - Match element
    */
   positionDropdown(dropdown, matchEl) {
-    const rect = matchEl.getBoundingClientRect();
+    const matchRect = matchEl.getBoundingClientRect();
+
+    // Force a layout calculation by accessing offsetWidth
+    // This ensures we get the correct dropdown dimensions after styles are applied
+    const _ = dropdown.offsetWidth;
+
     const dropdownRect = dropdown.getBoundingClientRect();
-    const offset = this.options.dropdownOffset;
 
-    // Position above match by default (since input is at bottom)
-    let top = rect.top + window.scrollY - dropdownRect.height - offset;
-    let left = rect.left + window.scrollX;
+    console.log('[DropdownManager] Positioning Debug:');
+    console.log('  Trigger position (x, y):', matchRect.left, matchRect.top);
+    console.log('  Dropdown width:', dropdownRect.width);
+    console.log('  Viewport width:', window.innerWidth);
 
-    // If dropdown goes off top edge, position below instead
-    if (top < window.scrollY) {
-      top = rect.bottom + window.scrollY + offset;
-    }
+    // Use EdgeDetectionHelper to calculate optimal position
+    // Increased padding to account for body margins/transforms and ensure visible clearance
+    const position = EdgeDetectionHelper.calculatePosition({
+      matchRect,
+      dropdownRect,
+      offset: this.options.dropdownOffset,
+      padding: 35
+    });
 
-    // Check if dropdown goes off right edge
-    if (left + dropdownRect.width > window.innerWidth) {
-      left = window.innerWidth - dropdownRect.width - 10;
-    }
+    console.log('  Calculated dropdown position (x, y):', position.left, position.top);
 
-    dropdown.style.top = `${top}px`;
-    dropdown.style.left = `${left}px`;
+    dropdown.style.top = `${position.top}px`;
+    dropdown.style.left = `${position.left}px`;
+
+    // Verify the position was actually applied
+    const computedStyle = window.getComputedStyle(dropdown);
+    const actualRect = dropdown.getBoundingClientRect();
+    console.log('  Verified applied styles:');
+    console.log('    styleTop:', dropdown.style.top);
+    console.log('    styleLeft:', dropdown.style.left);
+    console.log('    computedPosition:', computedStyle.position);
+    console.log('    actualBoundingRect:', JSON.stringify({
+      left: actualRect.left,
+      top: actualRect.top,
+      right: actualRect.right,
+      bottom: actualRect.bottom,
+      width: actualRect.width,
+      height: actualRect.height
+    }));
+    console.log('  Dropdown right edge:', actualRect.left + actualRect.width, 'vs viewport width:', window.innerWidth);
   }
 
   /**

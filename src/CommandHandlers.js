@@ -17,6 +17,8 @@ export class CommandHandlerRegistry {
     this.register('user-select-oneOf', new UserSelectHandler());
     this.register('api-json-table', new ApiJsonTableHandler());
     this.register('api-md-table', new ApiMdTableHandler());
+    this.register('display-menu', new DisplayMenuHandler());
+    this.register('display-menu-with-uri', new DisplayMenuWithUriHandler());
   }
 
   /**
@@ -344,6 +346,48 @@ class ApiMdTableHandler extends CommandHandler {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+}
+
+/**
+ * Handler for display-menu category
+ * Shows dropdown menu with selectable options
+ */
+class DisplayMenuHandler extends CommandHandler {
+  getStyles() {
+    return {
+      backgroundColor: 'rgba(16, 185, 129, 0.15)', // Green background
+      color: '#065f46', // Dark green text
+      textDecoration: 'none',
+      borderBottom: '2px solid #10b981', // Green underline
+      cursor: 'pointer'
+    };
+  }
+
+  getBubbleContent(matchData) {
+    // Display menu shows dropdown, not bubble
+    return null;
+  }
+}
+
+/**
+ * Handler for display-menu-with-uri category
+ * Shows dropdown menu with selectable options and clickable URI links
+ */
+class DisplayMenuWithUriHandler extends CommandHandler {
+  getStyles() {
+    return {
+      backgroundColor: 'rgba(16, 185, 129, 0.15)', // Green background
+      color: '#065f46', // Dark green text
+      textDecoration: 'none',
+      borderBottom: '2px solid #10b981', // Green underline
+      cursor: 'pointer'
+    };
+  }
+
+  getBubbleContent(matchData) {
+    // Display menu with URI shows dropdown, not bubble
+    return null;
   }
 }
 

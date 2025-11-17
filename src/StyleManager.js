@@ -272,8 +272,12 @@ export default class StyleManager {
   /**
    * Apply dropdown (menu) styles
    * @param {HTMLElement} dropdown - Dropdown element
+   * @param {string} category - Optional category to adjust styles
    */
-  applyDropdownStyles(dropdown) {
+  applyDropdownStyles(dropdown, category = '') {
+    // Use wider maxWidth for display-menu-with-uri to accommodate links
+    const maxWidth = category === 'display-menu-with-uri' ? '450px' : '300px';
+
     Object.assign(dropdown.style, {
       position: 'absolute',
       background: '#ffffff',
@@ -282,7 +286,7 @@ export default class StyleManager {
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
       zIndex: '10000',
       minWidth: '150px',
-      maxWidth: '300px',
+      maxWidth: maxWidth,
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       fontSize: '14px',

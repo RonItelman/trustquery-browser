@@ -74,7 +74,7 @@
     "info": [
       {
         "type": "match",
-        "category": "display-menu",
+        "category": "display-menu-with-uri",
         "match": ["@analytics"],
         "handler": {
           "highlight-concept": true,
@@ -86,6 +86,7 @@
               "on-select": {
                 "display": "@analytics/Assets-under-management-(AUM)"
               },
+              "uri": "https://en.wikipedia.org/wiki/Assets_under_management",
               "description": "AUM is a strong indicator of client trust and satisfaction."
             },
             {
@@ -93,13 +94,15 @@
               "on-select": {
                 "display": "@analytics/Lifetime-value"
               },
+              "uri": "https://en.wikipedia.org/wiki/Customer_lifetime_value",
               "description": "This metric assesses the total profit a client is expected to generate for the firm over the entire length of their relationship."
             },
             {
-              "label": "YTD Commission",              
+              "label": "YTD Commission",
               "on-select": {
                 "display": "@analytics/YTD-Commission"
               },
+              "uri": "https://en.wikipedia.org/wiki/Commission_(remuneration)",
               "description": "The YTD commission the client has generated"
             }
           ]
