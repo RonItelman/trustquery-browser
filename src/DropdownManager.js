@@ -102,8 +102,9 @@ export default class DropdownManager {
     // Setup keyboard navigation
     this.setupKeyboardHandlers();
 
-    // Close on click outside
+    // Close on click outside (using mousedown to match icon behavior)
     setTimeout(() => {
+      document.addEventListener('mousedown', this.closeDropdownHandler);
       document.addEventListener('click', this.closeDropdownHandler);
     }, 0);
 
@@ -428,6 +429,7 @@ export default class DropdownManager {
       this.dropdownOptions = null;
       this.dropdownMatchData = null;
       this.selectedDropdownIndex = 0;
+      document.removeEventListener('mousedown', this.closeDropdownHandler);
       document.removeEventListener('click', this.closeDropdownHandler);
       document.removeEventListener('keydown', this.keyboardHandler);
     }
@@ -437,8 +439,12 @@ export default class DropdownManager {
    * Close dropdown handler (bound to document)
    */
   closeDropdownHandler = (e) => {
-    // Only close if clicking outside the dropdown
+    // Only close if clicking outside the dropdown AND not on the trigger element
     if (this.activeDropdown && !this.activeDropdown.contains(e.target)) {
+      // Check if clicking on the trigger element itself - don't close in that case
+      if (this.activeDropdownMatch && (this.activeDropdownMatch === e.target || this.activeDropdownMatch.contains(e.target))) {
+        return;
+      }
       this.hideDropdown();
     }
   }

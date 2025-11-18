@@ -25,6 +25,60 @@ export default class AttachmentStyleManager {
   }
 
   /**
+   * Apply wrapper styles (container for icon + card)
+   * @param {HTMLElement} wrapper - Wrapper element
+   */
+  applyWrapperStyles(wrapper) {
+    Object.assign(wrapper.style, {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      marginBottom: '6px'
+    });
+  }
+
+  /**
+   * Apply icon placeholder styles
+   * @param {HTMLElement} placeholder - Icon placeholder element
+   * @param {boolean} hasIcon - Whether icon is present
+   */
+  applyIconPlaceholderStyles(placeholder, hasIcon) {
+    Object.assign(placeholder.style, {
+      width: '24px',
+      minWidth: '24px',
+      height: '48px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: '0'
+    });
+  }
+
+  /**
+   * Apply icon styles
+   * @param {HTMLElement} icon - Icon element
+   */
+  applyIconStyles(icon) {
+    if (!icon) return;
+
+    Object.assign(icon.style, {
+      width: '20px',
+      height: '20px',
+      cursor: 'pointer',
+      transition: 'transform 0.2s'
+    });
+
+    // Hover effect - slight scale
+    icon.addEventListener('mouseenter', () => {
+      icon.style.transform = 'scale(1.1)';
+    });
+
+    icon.addEventListener('mouseleave', () => {
+      icon.style.transform = 'scale(1)';
+    });
+  }
+
+  /**
    * Apply card styles (reduced padding to prevent cutoff)
    * @param {HTMLElement} card - Card element
    */
@@ -34,14 +88,14 @@ export default class AttachmentStyleManager {
       background: this.options.cardBackground,
       border: `1px solid ${this.options.cardBorder}`,
       borderRadius: '6px',
-      padding: '6px 10px', // Reduced vertical padding from 8px to 6px
-      marginBottom: '0', // Remove margin to prevent cutoff
+      padding: '6px 10px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '2px', // Reduced from 3px to 2px
+      gap: '2px',
       boxSizing: 'border-box',
       maxHeight: '48px',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      flex: '1' // Take remaining space in wrapper
     });
   }
 

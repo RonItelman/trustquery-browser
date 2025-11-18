@@ -69,6 +69,48 @@
             }
           ]
         }
+      },
+      {
+        "type": "csv-match-column",
+        "category": "display-menu",
+        "match": [
+          "Date"
+        ],
+        "handler": {
+          "highlight-concept": true,
+          "message-state": "warning",
+          "message": "Please confirm the timezone for this column:",
+          "options": [
+            {
+              "label": "Thu Nov 13, 7:29AM PST (selected)",
+              "on-select": {
+                "display": "Current Time: Thu Nov 13, 7:29AM PST"
+              }
+            },
+            {
+              "label": "Thu Nov 13, 8:29AM MST",
+              "on-select": {
+                "display": "Current Time: Thu Nov 13, 8:29AM MST"
+              }
+            },
+            {
+              "label": "Thu Nov 13, 9:29AM CST",
+              "on-select": {
+                "display": "Current Time: Thu Nov 13, 9:29AM CST"
+              }
+            },
+            {
+              "label": "Thu Nov 13, 10:29AM EST",
+              "on-select": {
+                "display": "Current Time: Thu Nov 13, 10:29AM EST"
+              }
+            },
+            {
+              "label": "Custom time...",
+              "user-input": true
+            }
+          ]
+        }
       }
     ],
     "info": [

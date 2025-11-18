@@ -11,6 +11,8 @@ export default class AttachmentManager {
       container: options.container || null,
       dropZone: options.dropZone || null,
       styleManager: options.styleManager || null,
+      commandScanner: options.commandScanner || null, // For scanning CSV columns
+      dropdownManager: options.dropdownManager || null, // For showing dropdown on warning click
       onAttachmentAdd: options.onAttachmentAdd || null,
       onAttachmentRemove: options.onAttachmentRemove || null,
       debug: options.debug || false,
@@ -89,17 +91,60 @@ export default class AttachmentManager {
   /**
    * Parse CSV and extract metadata
    * @param {string} csvText - CSV file content
-   * @returns {Object} - { rows, columns }
+   * @returns {Object} - { rows, columns, headers }
    */
   parseCSVMetadata(csvText) {
     const lines = csvText.trim().split('\n');
     const rows = lines.length;
 
-    // Count columns from first row
+    // Parse first row as headers
     const firstLine = lines[0] || '';
-    const columns = firstLine.split(',').length;
+    const headers = firstLine.split(',').map(h => h.trim());
+    const columns = headers.length;
 
-    return { rows, columns };
+    return { rows, columns, headers };
+  }
+
+  /**
+   * Scan CSV headers for trigger matches
+   * @param {Array} headers - CSV column headers
+   * @returns {Array} - Array of matches
+   */
+  scanCSVHeaders(headers) {
+    if (!this.options.commandScanner) {
+      return [];
+    }
+
+    const matches = [];
+
+    // Get CSV-specific triggers from command map
+    const commandMap = this.options.commandScanner.commandMap;
+    if (!commandMap || !commandMap['tql-triggers']) {
+      return [];
+    }
+
+    // Check warning triggers for csv-match-column type
+    const warnings = commandMap['tql-triggers'].warning || [];
+    const csvTriggers = warnings.filter(t => t.type === 'csv-match-column');
+
+    // Check each header against CSV triggers
+    headers.forEach((header, index) => {
+      csvTriggers.forEach(trigger => {
+        if (trigger.match && trigger.match.includes(header)) {
+          matches.push({
+            header,
+            columnIndex: index,
+            trigger,
+            intent: {
+              category: trigger.category,
+              handler: trigger.handler
+            }
+          });
+        }
+      });
+    });
+
+    return matches;
   }
 
   /**
@@ -112,12 +157,50 @@ export default class AttachmentManager {
   }
 
   /**
-   * Create attachment card element
+   * Create attachment wrapper with icon placeholder and card
    * @param {File} file - File object
-   * @param {Object} metadata - { rows, columns }
-   * @returns {HTMLElement} - Card element
+   * @param {Object} metadata - { rows, columns, headers }
+   * @param {Array} matches - CSV header matches
+   * @returns {HTMLElement} - Wrapper element
    */
-  createAttachmentCard(file, metadata) {
+  createAttachmentCard(file, metadata, matches = []) {
+    // Create wrapper container
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tq-attachment-wrapper';
+
+    // Create icon placeholder
+    const iconPlaceholder = document.createElement('div');
+    iconPlaceholder.className = 'tq-attachment-icon-placeholder';
+
+    // Add warning/error/info icon if matches found
+    let icon = null;
+    if (matches.length > 0) {
+      const match = matches[0];
+      const messageState = match.intent?.handler?.['message-state'] || 'warning';
+
+      // Map message state to icon filename
+      const iconMap = {
+        'error': 'trustquery-error.svg',
+        'warning': 'trustquery-warning.svg',
+        'info': 'trustquery-info.svg'
+      };
+
+      icon = document.createElement('img');
+      icon.className = 'tq-attachment-icon';
+      icon.src = `./assets/${iconMap[messageState] || iconMap.warning}`;
+      icon.title = `CSV column ${messageState} - click to review`;
+
+      // Handle icon click - show dropdown (using mousedown to prevent double-firing)
+      icon.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleWarningClick(icon, matches, wrapper);
+      });
+
+      iconPlaceholder.appendChild(icon);
+    }
+
+    // Create card
     const card = document.createElement('div');
     card.className = 'tq-attachment-card';
 
@@ -125,7 +208,7 @@ export default class AttachmentManager {
     const removeBtn = document.createElement('button');
     removeBtn.className = 'tq-attachment-remove';
     removeBtn.innerHTML = '×';
-    removeBtn.onclick = () => this.removeAttachment(file.name, card);
+    removeBtn.onclick = () => this.removeAttachment(file.name, wrapper);
 
     // File name header
     const fileNameHeader = document.createElement('div');
@@ -155,13 +238,57 @@ export default class AttachmentManager {
 
     // Apply styles via StyleManager
     if (this.options.styleManager) {
+      this.options.styleManager.applyWrapperStyles(wrapper);
+      this.options.styleManager.applyIconPlaceholderStyles(iconPlaceholder, matches.length > 0);
+      this.options.styleManager.applyIconStyles(icon);
       this.options.styleManager.applyCardStyles(card);
       this.options.styleManager.applyRemoveButtonStyles(removeBtn);
       this.options.styleManager.applyHeaderStyles(fileNameHeader);
       this.options.styleManager.applyMetaStyles(metaRow);
     }
 
-    return card;
+    // Assemble structure
+    wrapper.appendChild(iconPlaceholder);
+    wrapper.appendChild(card);
+
+    return wrapper;
+  }
+
+  /**
+   * Handle warning icon click - show dropdown
+   * @param {HTMLElement} iconEl - Warning icon element
+   * @param {Array} matches - CSV header matches
+   * @param {HTMLElement} card - Card element
+   */
+  handleWarningClick(iconEl, matches, card) {
+    if (!this.options.dropdownManager || matches.length === 0) {
+      return;
+    }
+
+    // Use the first match (could be enhanced to handle multiple)
+    const match = matches[0];
+
+    // Create match data similar to text matches
+    const matchData = {
+      text: match.header,
+      command: {
+        id: `csv-column-${match.columnIndex}`,
+        match: match.header,
+        matchType: 'csv-column',
+        messageState: match.intent.handler['message-state'] || 'warning',
+        category: match.intent.category,
+        intent: match.intent,
+        handler: match.intent.handler
+      },
+      intent: match.intent
+    };
+
+    // Show dropdown using DropdownManager
+    this.options.dropdownManager.showDropdown(iconEl, matchData);
+
+    if (this.options.debug) {
+      console.log('[AttachmentManager] Showing dropdown for CSV column:', match.header);
+    }
   }
 
   /**
@@ -184,33 +311,36 @@ export default class AttachmentManager {
     const text = await file.text();
     const metadata = this.parseCSVMetadata(text);
 
-    // Create card
-    const card = this.createAttachmentCard(file, metadata);
+    // Scan CSV headers for trigger matches
+    const matches = this.scanCSVHeaders(metadata.headers || []);
 
-    // Store file reference
-    this.attachedFiles.set(file.name, { file, card, metadata });
+    // Create wrapper with card and icon
+    const wrapper = this.createAttachmentCard(file, metadata, matches);
+
+    // Store file reference with matches
+    this.attachedFiles.set(file.name, { file, wrapper, metadata, matches });
 
     // Add to container
-    this.options.container.appendChild(card);
+    this.options.container.appendChild(wrapper);
     this.options.container.classList.add('has-attachments');
 
     // Trigger callback
     if (this.options.onAttachmentAdd) {
-      this.options.onAttachmentAdd({ file, metadata });
+      this.options.onAttachmentAdd({ file, metadata, matches });
     }
 
     if (this.options.debug) {
-      console.log('[AttachmentManager] Added:', file.name, metadata);
+      console.log('[AttachmentManager] Added:', file.name, metadata, 'matches:', matches);
     }
   }
 
   /**
    * Remove attachment
    * @param {string} fileName - File name to remove
-   * @param {HTMLElement} card - Card element
+   * @param {HTMLElement} wrapper - Wrapper element
    */
-  removeAttachment(fileName, card) {
-    card.remove();
+  removeAttachment(fileName, wrapper) {
+    wrapper.remove();
     const attachment = this.attachedFiles.get(fileName);
     this.attachedFiles.delete(fileName);
 
@@ -242,7 +372,7 @@ export default class AttachmentManager {
    */
   clearAll() {
     this.attachedFiles.forEach((attachment, fileName) => {
-      this.removeAttachment(fileName, attachment.card);
+      this.removeAttachment(fileName, attachment.wrapper);
     });
   }
 

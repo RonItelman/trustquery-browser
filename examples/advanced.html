@@ -138,13 +138,18 @@
       container: document.getElementById('chat-attachments-container'),
       dropZone: document.getElementById('chat-input-wrapper'),
       styleManager: attachmentStyleManager,
+      commandScanner: editor.scanner, // Pass scanner to check CSV columns
+      dropdownManager: editor.interactionHandler?.dropdownManager, // Pass dropdown manager
       onAttachmentAdd: (data) => {
-        helpModal.logEvent(`Attached: ${data.file.name} (${data.metadata.rows} rows, ${data.metadata.columns} cols)`);
+        const matchInfo = data.matches && data.matches.length > 0
+          ? ` ⚠️ ${data.matches.length} column warning(s)`
+          : '';
+        helpModal.logEvent(`Attached: ${data.file.name} (${data.metadata.rows} rows, ${data.metadata.columns} cols)${matchInfo}`);
       },
       onAttachmentRemove: (data) => {
         helpModal.logEvent(`Removed: ${data.file.name}`);
       },
-      debug: false
+      debug: true
     });
 
     attachmentManager.init();
