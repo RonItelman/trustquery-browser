@@ -50,7 +50,8 @@ export default class AttachmentStyleManager {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      flexShrink: '0'
+      flexShrink: '0',
+      transition: 'width 0.3s ease, min-width 0.3s ease'
     });
   }
 

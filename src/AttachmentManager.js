@@ -325,13 +325,20 @@ export default class AttachmentManager {
       const existingIcon = iconPlaceholder?.querySelector('.tq-attachment-icon');
 
       if (newMatches.length === 0 && existingIcon) {
-        // No more matches - remove the icon
+        // No more matches - remove the icon and collapse placeholder
         existingIcon.remove();
+
+        // Collapse the icon placeholder by setting width to 0
+        if (iconPlaceholder) {
+          iconPlaceholder.style.width = '0';
+          iconPlaceholder.style.minWidth = '0';
+        }
+
         if (this.options.debug) {
           console.log('[AttachmentManager] Removed warning icon - all warnings resolved');
         }
       } else if (newMatches.length > 0 && !existingIcon) {
-        // New matches appeared - add icon (shouldn't happen in normal flow, but handle it)
+        // New matches appeared - add icon and expand placeholder
         const match = newMatches[0];
         const messageState = match.intent?.handler?.['message-state'] || 'warning';
         const iconMap = {
@@ -339,6 +346,12 @@ export default class AttachmentManager {
           'warning': 'trustquery-warning.svg',
           'info': 'trustquery-info.svg'
         };
+
+        // Expand the icon placeholder back to normal width
+        if (iconPlaceholder) {
+          iconPlaceholder.style.width = '24px';
+          iconPlaceholder.style.minWidth = '24px';
+        }
 
         const icon = document.createElement('img');
         icon.className = 'tq-attachment-icon';
