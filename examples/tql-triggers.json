@@ -82,32 +82,40 @@
           "message": "Please confirm the timezone for this column:",
           "options": [
             {
-              "label": "Thu Nov 13, 7:29AM PST (selected)",
+              "label": "PST (Pacific Standard Time)",
               "on-select": {
-                "display": "Current Time: Thu Nov 13, 7:29AM PST"
+                "display": "Timezone: PST"
               }
             },
             {
-              "label": "Thu Nov 13, 8:29AM MST",
+              "label": "MST (Mountain Standard Time)",
               "on-select": {
-                "display": "Current Time: Thu Nov 13, 8:29AM MST"
+                "display": "Timezone: MST"
               }
             },
             {
-              "label": "Thu Nov 13, 9:29AM CST",
+              "label": "CST (Central Standard Time)",
               "on-select": {
-                "display": "Current Time: Thu Nov 13, 9:29AM CST"
+                "display": "Timezone: CST"
               }
             },
             {
-              "label": "Thu Nov 13, 10:29AM EST",
+              "label": "EST (Eastern Standard Time)",
               "on-select": {
-                "display": "Current Time: Thu Nov 13, 10:29AM EST"
+                "display": "Timezone: EST"
               }
             },
             {
-              "label": "Custom time...",
-              "user-input": true
+              "label": "AKST (Alaska Standard Time)",
+              "on-select": {
+                "display": "Timezone: AKST"
+              }
+            },
+            {
+              "label": "HST (Hawaii Standard Time)",
+              "on-select": {
+                "display": "Timezone: HST"
+              }
             }
           ]
         }

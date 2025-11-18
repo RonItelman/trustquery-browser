@@ -196,7 +196,7 @@ export default class AttachmentManager {
       icon.addEventListener('mousedown', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.handleWarningClick(icon, matches, wrapper);
+        this.handleWarningClick(icon, matches, wrapper, file.name);
       });
 
       iconPlaceholder.appendChild(icon);
@@ -258,10 +258,15 @@ export default class AttachmentManager {
       }
 
       if (this.options.csvModalManager) {
+        // Get the latest CSV text from attachedFiles (in case it was updated)
+        const attachment = this.attachedFiles.get(file.name);
+        const currentText = attachment ? attachment.text : csvText;
+        const currentMetadata = attachment ? attachment.metadata : metadata;
+
         this.options.csvModalManager.show({
           file,
-          text: csvText,
-          metadata
+          text: currentText,
+          metadata: currentMetadata
         });
       }
     });
@@ -274,12 +279,55 @@ export default class AttachmentManager {
   }
 
   /**
+   * Update CSV column header in stored text
+   * @param {string} fileName - File name
+   * @param {number} colIndex - Column index
+   * @param {string} appendText - Text to append (e.g., "/PST")
+   */
+  updateCSVColumnHeader(fileName, colIndex, appendText) {
+    const attachment = this.attachedFiles.get(fileName);
+    if (!attachment) {
+      console.warn('[AttachmentManager] File not found:', fileName);
+      return;
+    }
+
+    // Parse CSV and update header
+    const lines = attachment.text.split('\n');
+    if (lines.length === 0) {
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim());
+    if (colIndex >= headers.length) {
+      return;
+    }
+
+    // Remove any existing suffix (text after /)
+    const baseHeader = headers[colIndex].split('/')[0];
+    headers[colIndex] = baseHeader + appendText;
+
+    // Update first line
+    lines[0] = headers.join(', ');
+
+    // Update stored text
+    attachment.text = lines.join('\n');
+
+    // Update metadata
+    attachment.metadata.headers = headers;
+
+    if (this.options.debug) {
+      console.log('[AttachmentManager] Updated CSV column', colIndex, 'to', headers[colIndex]);
+    }
+  }
+
+  /**
    * Handle warning icon click - show dropdown
    * @param {HTMLElement} iconEl - Warning icon element
    * @param {Array} matches - CSV header matches
-   * @param {HTMLElement} card - Card element
+   * @param {HTMLElement} wrapper - Wrapper element
+   * @param {string} fileName - File name for tracking
    */
-  handleWarningClick(iconEl, matches, card) {
+  handleWarningClick(iconEl, matches, wrapper, fileName) {
     if (!this.options.dropdownManager || matches.length === 0) {
       return;
     }
@@ -299,7 +347,11 @@ export default class AttachmentManager {
         intent: match.intent,
         handler: match.intent.handler
       },
-      intent: match.intent
+      intent: match.intent,
+      // Add context for attachment icon click
+      isAttachmentIcon: true,
+      fileName: fileName,
+      csvColumnIndex: match.columnIndex
     };
 
     // Show dropdown using DropdownManager

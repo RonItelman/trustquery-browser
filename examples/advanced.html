@@ -94,20 +94,27 @@
               : matchData.selectedOption.label;
             helpModal.logEvent(`  → Selected: ${label}`);
 
-            // Handle CSV cell selection - update column header
+            // Extract display text
+            const displayText = matchData.selectedOption?.['on-select']?.display || label;
+
+            // Extract just the suffix part after ":" if present
+            // e.g., "Current Time: Thu Nov 13, 7:29AM PST" -> "/Thu Nov 13, 7:29AM PST"
+            let suffix = displayText;
+            if (displayText.includes(':')) {
+              suffix = displayText.split(':').slice(1).join(':').trim();
+            }
+
+            // Handle attachment icon click - update stored CSV
+            if (matchData.isAttachmentIcon && matchData.fileName && matchData.csvColumnIndex !== undefined) {
+              attachmentManager.updateCSVColumnHeader(matchData.fileName, matchData.csvColumnIndex, '/' + suffix);
+              helpModal.logEvent(`  → Updated attachment CSV column ${matchData.csvColumnIndex} header`);
+            }
+
+            // Handle CSV cell selection in modal - update displayed table
             if (matchData.csvCellPosition && matchData.csvCellPosition.isHeader) {
               const colIndex = matchData.csvCellPosition.colIndex;
-              const displayText = matchData.selectedOption?.['on-select']?.display || label;
-
-              // Extract just the suffix part after ":" if present
-              // e.g., "Current Time: Thu Nov 13, 7:29AM PST" -> "/Thu Nov 13, 7:29AM PST"
-              let suffix = displayText;
-              if (displayText.includes(':')) {
-                suffix = displayText.split(':').slice(1).join(':').trim();
-              }
-
               csvModalManager.updateColumnHeader(colIndex, '/' + suffix);
-              helpModal.logEvent(`  → Updated column ${colIndex} header`);
+              helpModal.logEvent(`  → Updated modal column ${colIndex} header`);
             }
           }
         }
