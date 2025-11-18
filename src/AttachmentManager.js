@@ -315,6 +315,56 @@ export default class AttachmentManager {
     // Update metadata
     attachment.metadata.headers = headers;
 
+    // Re-scan headers for matches
+    const newMatches = this.scanCSVHeaders(headers);
+    attachment.matches = newMatches;
+
+    // Update icon visibility based on matches
+    if (attachment.wrapper) {
+      const iconPlaceholder = attachment.wrapper.querySelector('.tq-attachment-icon-placeholder');
+      const existingIcon = iconPlaceholder?.querySelector('.tq-attachment-icon');
+
+      if (newMatches.length === 0 && existingIcon) {
+        // No more matches - remove the icon
+        existingIcon.remove();
+        if (this.options.debug) {
+          console.log('[AttachmentManager] Removed warning icon - all warnings resolved');
+        }
+      } else if (newMatches.length > 0 && !existingIcon) {
+        // New matches appeared - add icon (shouldn't happen in normal flow, but handle it)
+        const match = newMatches[0];
+        const messageState = match.intent?.handler?.['message-state'] || 'warning';
+        const iconMap = {
+          'error': 'trustquery-error.svg',
+          'warning': 'trustquery-warning.svg',
+          'info': 'trustquery-info.svg'
+        };
+
+        const icon = document.createElement('img');
+        icon.className = 'tq-attachment-icon';
+        icon.src = `./assets/${iconMap[messageState] || iconMap.warning}`;
+        icon.title = `CSV column ${messageState} - click to review`;
+
+        // Handle icon click
+        icon.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.handleWarningClick(icon, newMatches, attachment.wrapper, fileName);
+        });
+
+        // Apply styles if styleManager exists
+        if (this.options.styleManager) {
+          this.options.styleManager.applyIconStyles(icon);
+        }
+
+        iconPlaceholder?.appendChild(icon);
+
+        if (this.options.debug) {
+          console.log('[AttachmentManager] Added warning icon - new warnings detected');
+        }
+      }
+    }
+
     if (this.options.debug) {
       console.log('[AttachmentManager] Updated CSV column', colIndex, 'to', headers[colIndex]);
     }
