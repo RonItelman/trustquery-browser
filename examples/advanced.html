@@ -45,12 +45,13 @@
   </div>
 
   <script type="module">
-    import TrustQuery from '../dist/trustquery.js';
+    import TrustQuery, {
+      AttachmentManager,
+      AttachmentStyleManager,
+      CSVModalManager,
+      CSVModalStyleManager
+    } from '../dist/trustquery.js';
     import HelpModalManager from './HelpModalManager.js';
-    import AttachmentManager from './AttachmentManager.js';
-    import AttachmentStyleManager from './AttachmentStyleManager.js';
-    import CSVModalManager from './CSVModalManager.js';
-    import CSVModalStyleManager from './CSVModalStyleManager.js';
 
     console.log('[Demo] Initializing TrustQuery...');
 

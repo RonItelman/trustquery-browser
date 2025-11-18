@@ -10,6 +10,12 @@ import AutoGrow from './AutoGrow.js';
 import ValidationStateManager from './ValidationStateManager.js';
 import MobileKeyboardHandler from './MobileKeyboardHandler.js';
 
+// Import attachment managers for re-export
+import AttachmentManager from './AttachmentManager.js';
+import AttachmentStyleManager from './AttachmentStyleManager.js';
+import CSVModalManager from './CSVModalManager.js';
+import CSVModalStyleManager from './CSVModalStyleManager.js';
+
 export default class TrustQuery {
   // Store all instances
   static instances = new Map();
@@ -550,3 +556,11 @@ export default class TrustQuery {
     this.render();
   }
 }
+
+// Export attachment managers as named exports
+export {
+  AttachmentManager,
+  AttachmentStyleManager,
+  CSVModalManager,
+  CSVModalStyleManager
+};
