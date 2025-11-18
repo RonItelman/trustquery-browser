@@ -49,6 +49,8 @@
     import HelpModalManager from './HelpModalManager.js';
     import AttachmentManager from './AttachmentManager.js';
     import AttachmentStyleManager from './AttachmentStyleManager.js';
+    import CSVModalManager from './CSVModalManager.js';
+    import CSVModalStyleManager from './CSVModalStyleManager.js';
 
     console.log('[Demo] Initializing TrustQuery...');
 
@@ -91,6 +93,22 @@
               ? matchData.selectedOption
               : matchData.selectedOption.label;
             helpModal.logEvent(`  → Selected: ${label}`);
+
+            // Handle CSV cell selection - update column header
+            if (matchData.csvCellPosition && matchData.csvCellPosition.isHeader) {
+              const colIndex = matchData.csvCellPosition.colIndex;
+              const displayText = matchData.selectedOption?.['on-select']?.display || label;
+
+              // Extract just the suffix part after ":" if present
+              // e.g., "Current Time: Thu Nov 13, 7:29AM PST" -> "/Thu Nov 13, 7:29AM PST"
+              let suffix = displayText;
+              if (displayText.includes(':')) {
+                suffix = displayText.split(':').slice(1).join(':').trim();
+              }
+
+              csvModalManager.updateColumnHeader(colIndex, '/' + suffix);
+              helpModal.logEvent(`  → Updated column ${colIndex} header`);
+            }
           }
         }
       }
@@ -132,6 +150,15 @@
 
     console.log('[Demo] TrustQuery initialized:', editor);
 
+    // Initialize CSV Modal Managers
+    const csvModalStyleManager = new CSVModalStyleManager();
+    const csvModalManager = new CSVModalManager({
+      styleManager: csvModalStyleManager,
+      commandScanner: editor.scanner,
+      dropdownManager: editor.interactionHandler?.dropdownManager,
+      debug: true
+    });
+
     // Initialize Attachment Managers
     const attachmentStyleManager = new AttachmentStyleManager();
     const attachmentManager = new AttachmentManager({
@@ -140,6 +167,7 @@
       styleManager: attachmentStyleManager,
       commandScanner: editor.scanner, // Pass scanner to check CSV columns
       dropdownManager: editor.interactionHandler?.dropdownManager, // Pass dropdown manager
+      csvModalManager: csvModalManager, // Pass CSV modal manager
       onAttachmentAdd: (data) => {
         const matchInfo = data.matches && data.matches.length > 0
           ? ` ⚠️ ${data.matches.length} column warning(s)`
@@ -156,6 +184,7 @@
 
     // Expose for debugging
     window.trustquery.attachmentManager = attachmentManager;
+    window.trustquery.csvModalManager = csvModalManager;
 
     // Submit button functionality
     const textarea = document.getElementById('demo-textarea');

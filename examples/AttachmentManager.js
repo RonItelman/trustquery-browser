@@ -13,6 +13,7 @@ export default class AttachmentManager {
       styleManager: options.styleManager || null,
       commandScanner: options.commandScanner || null, // For scanning CSV columns
       dropdownManager: options.dropdownManager || null, // For showing dropdown on warning click
+      csvModalManager: options.csvModalManager || null, // For displaying CSV content in modal
       onAttachmentAdd: options.onAttachmentAdd || null,
       onAttachmentRemove: options.onAttachmentRemove || null,
       debug: options.debug || false,
@@ -159,11 +160,12 @@ export default class AttachmentManager {
   /**
    * Create attachment wrapper with icon placeholder and card
    * @param {File} file - File object
+   * @param {string} csvText - CSV file content
    * @param {Object} metadata - { rows, columns, headers }
    * @param {Array} matches - CSV header matches
    * @returns {HTMLElement} - Wrapper element
    */
-  createAttachmentCard(file, metadata, matches = []) {
+  createAttachmentCard(file, csvText, metadata, matches = []) {
     // Create wrapper container
     const wrapper = document.createElement('div');
     wrapper.className = 'tq-attachment-wrapper';
@@ -247,6 +249,23 @@ export default class AttachmentManager {
       this.options.styleManager.applyMetaStyles(metaRow);
     }
 
+    // Add click handler to card to open CSV modal
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      // Don't open modal if clicking remove button
+      if (e.target === removeBtn || removeBtn.contains(e.target)) {
+        return;
+      }
+
+      if (this.options.csvModalManager) {
+        this.options.csvModalManager.show({
+          file,
+          text: csvText,
+          metadata
+        });
+      }
+    });
+
     // Assemble structure
     wrapper.appendChild(iconPlaceholder);
     wrapper.appendChild(card);
@@ -315,10 +334,10 @@ export default class AttachmentManager {
     const matches = this.scanCSVHeaders(metadata.headers || []);
 
     // Create wrapper with card and icon
-    const wrapper = this.createAttachmentCard(file, metadata, matches);
+    const wrapper = this.createAttachmentCard(file, text, metadata, matches);
 
-    // Store file reference with matches
-    this.attachedFiles.set(file.name, { file, wrapper, metadata, matches });
+    // Store file reference with matches and text
+    this.attachedFiles.set(file.name, { file, text, wrapper, metadata, matches });
 
     // Add to container
     this.options.container.appendChild(wrapper);
