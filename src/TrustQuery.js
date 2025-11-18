@@ -8,6 +8,7 @@ import StyleManager from './StyleManager.js';
 import CommandHandlerRegistry from './CommandHandlers.js';
 import AutoGrow from './AutoGrow.js';
 import ValidationStateManager from './ValidationStateManager.js';
+import MobileKeyboardHandler from './MobileKeyboardHandler.js';
 
 export default class TrustQuery {
   // Store all instances
@@ -210,6 +211,17 @@ export default class TrustQuery {
         minHeight: 44
       });
       console.log('[TrustQuery] AutoGrow feature enabled');
+    }
+
+    // Mobile keyboard handler (enabled by default, can be disabled via options)
+    if (this.options.mobileKeyboard !== false) {
+      this.features.mobileKeyboard = new MobileKeyboardHandler({
+        textarea: this.textarea,
+        wrapper: this.wrapper,
+        debug: this.options.debug
+      });
+      this.features.mobileKeyboard.init();
+      console.log('[TrustQuery] Mobile keyboard handler enabled');
     }
 
     // Debug logging feature
@@ -500,6 +512,16 @@ export default class TrustQuery {
     // Cleanup interaction handler
     if (this.interactionHandler) {
       this.interactionHandler.destroy();
+    }
+
+    // Cleanup mobile keyboard handler
+    if (this.features.mobileKeyboard) {
+      this.features.mobileKeyboard.destroy();
+    }
+
+    // Cleanup auto-grow
+    if (this.features.autoGrow) {
+      this.features.autoGrow.destroy();
     }
 
     // Unwrap textarea
