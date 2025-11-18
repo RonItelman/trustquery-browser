@@ -1,6 +1,6 @@
 {
   "name": "@trustquery/browser",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Turn any textarea into an interactive trigger-based editor with inline styling",
   "type": "module",
   "main": "dist/trustquery.js",
