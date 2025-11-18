@@ -47,6 +47,8 @@
   <script type="module">
     import TrustQuery from '../dist/trustquery.js';
     import HelpModalManager from './HelpModalManager.js';
+    import AttachmentManager from './AttachmentManager.js';
+    import AttachmentStyleManager from './AttachmentStyleManager.js';
 
     console.log('[Demo] Initializing TrustQuery...');
 
@@ -130,16 +132,25 @@
 
     console.log('[Demo] TrustQuery initialized:', editor);
 
-    // Demo: Toggle attachments (for testing)
-    const attachmentsContainer = document.getElementById('chat-attachments-container');
-    window.trustquery.toggleAttachment = () => {
-      attachmentsContainer.classList.toggle('has-attachments');
-      if (attachmentsContainer.classList.contains('has-attachments')) {
-        attachmentsContainer.innerHTML = '<div style="background: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 12px;">📎 attachment.pdf</div>';
-      } else {
-        attachmentsContainer.innerHTML = '';
-      }
-    };
+    // Initialize Attachment Managers
+    const attachmentStyleManager = new AttachmentStyleManager();
+    const attachmentManager = new AttachmentManager({
+      container: document.getElementById('chat-attachments-container'),
+      dropZone: document.getElementById('chat-input-wrapper'),
+      styleManager: attachmentStyleManager,
+      onAttachmentAdd: (data) => {
+        helpModal.logEvent(`Attached: ${data.file.name} (${data.metadata.rows} rows, ${data.metadata.columns} cols)`);
+      },
+      onAttachmentRemove: (data) => {
+        helpModal.logEvent(`Removed: ${data.file.name}`);
+      },
+      debug: false
+    });
+
+    attachmentManager.init();
+
+    // Expose for debugging
+    window.trustquery.attachmentManager = attachmentManager;
 
     // Submit button functionality
     const textarea = document.getElementById('demo-textarea');
