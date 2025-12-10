@@ -17,6 +17,8 @@
   "files": [
     "dist",
     "src",
+    "examples/tql-triggers.json",
+    "examples/assets",
     "README.md"
   ],
   "scripts": {
